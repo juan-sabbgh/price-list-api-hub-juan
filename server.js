@@ -697,7 +697,7 @@ app.post('/api/price-list/tire-search', (req, res) => {
   }
 });
 
-// 轮胎规格解析测试端点
+// Tire specification parsing test endpoint
 app.post('/api/price-list/tire-parse', (req, res) => {
   try {
     const { product_name } = req.body;
@@ -705,7 +705,7 @@ app.post('/api/price-list/tire-parse', (req, res) => {
     if (!product_name) {
       return res.status(400).json({
         success: false,
-        error: '请提供产品名称(product_name)进行解析'
+        error: 'Please provide product name (product_name) for parsing'
       });
     }
 
@@ -713,35 +713,35 @@ app.post('/api/price-list/tire-parse', (req, res) => {
     
     res.json({
       success: true,
-      message: '轮胎规格解析完成',
+      message: 'Tire specification parsing completed',
       input: product_name,
       parsed_specs: specs,
       is_parseable: specs.width !== null
     });
 
   } catch (error) {
-    console.error('轮胎解析错误:', error);
+    console.error('Tire parsing error:', error);
     res.status(500).json({
       success: false,
-      error: '轮胎规格解析过程中发生错误'
+      error: 'Error occurred during tire specification parsing'
     });
   }
 });
 
-// 错误处理中间件
+// Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
     success: false,
-    error: '服务器内部错误'
+    error: 'Internal server error'
   });
 });
 
-// 向后兼容的路由重定向
+// Backward compatible route redirects
 app.get('/api/health', (req, res) => res.redirect('/api/price-list/health'));
 app.get('/api/products', (req, res) => res.redirect('/api/price-list/products'));
 app.post('/api/product/search', (req, res) => {
-  // 转发请求到新的端点
+  // Forward request to new endpoint
   req.url = '/api/price-list/search';
   app.handle(req, res);
 });
@@ -753,11 +753,11 @@ app.post('/api/reload', (req, res) => {
   app.handle(req, res);
 });
 
-// 404处理
+// 404 handling
 app.use('*', (req, res) => {
   res.status(404).json({
     success: false,
-    error: '端点不存在',
+    error: 'Endpoint does not exist',
     availableEndpoints: {
       'price-list': [
         'GET /api/price-list/health',
@@ -770,10 +770,10 @@ app.use('*', (req, res) => {
   });
 });
 
-// 启动服务器
+// Start server
 app.listen(PORT, () => {
-  console.log(`服务器运行在端口 ${PORT}`);
-  console.log(`访问 http://localhost:${PORT} 查看API文档`);
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Visit http://localhost:${PORT} to view API documentation`);
 });
 
 module.exports = app; 

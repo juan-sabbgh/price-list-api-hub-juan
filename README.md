@@ -1,139 +1,139 @@
-# API Hub - 价格清单服务
+# API Hub - Price List Service
 
-这是一个基于 Node.js 和 Express 的 API 集成中心，专为 AI Agent 调用设计，提供价格清单查询和轮胎规格搜索服务。
+This is an API integration center based on Node.js and Express, designed specifically for AI Agent calls, providing price list queries and tire specification search services.
 
-## 🎯 功能特点
+## 🎯 Features
 
-- 📊 **Excel 数据处理**: 自动读取和解析 Excel 文件 (296条产品数据)
-- 🔍 **智能搜索**: 支持多参数产品搜索和价格筛选
-- 🚗 **轮胎规格搜索**: 专业的轮胎规格匹配系统 (支持116个轮胎产品)
-- 🤖 **Agent 友好**: 统一的响应格式 (raw/markdown/type/desc)
-- 🔬 **智能解析**: 自动解析轮胎产品规格参数
-- 🚀 **RESTful API**: 提供标准的 REST API 接口
-- 🛡️ **安全性**: 包含速率限制、CORS 和安全头设置
+- 📊 **Excel Data Processing**: Automatically read and parse Excel files (296 product records)
+- 🔍 **Smart Search**: Support multi-parameter product search and price filtering
+- 🚗 **Tire Specification Search**: Professional tire specification matching system (supports 116 tire products)
+- 🤖 **Agent Friendly**: Unified response format (raw/markdown/type/desc)
+- 🔬 **Smart Parsing**: Automatically parse tire product specification parameters
+- 🚀 **RESTful API**: Provide standard REST API interfaces
+- 🛡️ **Security**: Includes rate limiting, CORS, and security headers
 
-## 📡 API 端点
+## 📡 API Endpoints
 
-### 主入口
-- `GET /` - API Hub 信息和模块列表
+### Main Entry
+- `GET /` - API Hub information and module list
 
-### 价格清单模块 (`/api/price-list/`)
+### Price List Module (`/api/price-list/`)
 
-#### 基础端点
-- `GET /api/price-list/health` - 健康检查和数据统计
-- `GET /api/price-list/products` - 获取所有产品
-- `POST /api/price-list/reload` - 重新加载 Excel 数据
+#### Basic Endpoints
+- `GET /api/price-list/health` - Health check and data statistics
+- `GET /api/price-list/products` - Get all products
+- `POST /api/price-list/reload` - Reload Excel data
 
-#### 产品查询端点
-- `POST /api/price-list/search` - 产品搜索 (支持多参数)
-- `GET /api/price-list/product/:id` - 根据产品ID获取详情
+#### Product Query Endpoints
+- `POST /api/price-list/search` - Product search (supports multi-parameters)
+- `GET /api/price-list/product/:id` - Get product details by ID
 
-#### 🚗 轮胎专用端点
-- `POST /api/price-list/tire-search` - 轮胎规格搜索
-- `POST /api/price-list/tire-parse` - 轮胎规格解析测试
+#### 🚗 Tire Specific Endpoints
+- `POST /api/price-list/tire-search` - Tire specification search
+- `POST /api/price-list/tire-parse` - Tire specification parsing test
 
-## 🔧 Agent 响应格式
+## 🔧 Agent Response Format
 
-所有 API 返回统一的 Agent 友好格式：
+All APIs return a unified Agent-friendly format:
 
 ```json
 {
   "raw": {
-    // 结构化数据，便于程序处理
+    // Structured data for program processing
   },
-  "markdown": "| 列1 | 列2 |\n|:---|:---|\n| 值1 | 值2 |",
+  "markdown": "| Column1 | Column2 |\n|:-------|:--------|\n| Value1 | Value2 |",
   "type": "markdown",
-  "desc": "详细的文本描述，便于用户阅读"
+  "desc": "Detailed text description for user reading"
 }
 ```
 
-## 🚗 轮胎搜索系统
+## 🚗 Tire Search System
 
-### 支持的轮胎类型
+### Supported Tire Types
 
-1. **小型轿车轮胎** (114个产品)
-   - 格式: `155/70R13`, `185/60R15`, `175 65 R15`, `155 70 13` 等
-   - 参数: `width`, `aspectRatio`, `diameter`
-   - 智能格式识别: 支持多种输入格式
+1. **Car Tires** (114 products)
+   - Formats: `155/70R13`, `185/60R15`, `175 65 R15`, `155 70 13`, etc.
+   - Parameters: `width`, `aspectRatio`, `diameter`
+   - Smart format recognition: Support multiple input formats
 
-2. **货车轮胎** (2个产品)  
-   - 格式: `1100R22`, `1100 R22` 等
-   - 参数: `width`, `diameter`
+2. **Truck Tires** (2 products)  
+   - Formats: `1100R22`, `1100 R22`, etc.
+   - Parameters: `width`, `diameter`
 
-### 🔧 轮胎格式智能识别
+### 🔧 Smart Tire Format Recognition
 
-系统支持多种轮胎规格输入格式：
+The system supports multiple tire specification input formats:
 
-**小型轿车轮胎格式支持:**
-- `155/70R13` (标准格式)
-- `155/70-13` (短横线格式)  
-- `155 70 13` (空格分隔)
-- `155 70 R13` (空格+R格式) ✨ **新增支持**
-- `175 65 R15 84H SAFERICH` (完整产品名)
+**Car Tire Format Support:**
+- `155/70R13` (Standard format)
+- `155/70-13` (Dash format)  
+- `155 70 13` (Space separated)
+- `155 70 R13` (Space + R format) ✨ **New Support**
+- `175 65 R15 84H SAFERICH` (Full product name)
 
-**智能匹配特性:**
-- 🧠 自动忽略R字符差异 (用户输入"15"或"R15"都能匹配)
-- 🔍 模糊匹配规格参数
-- 📊 按价格排序返回结果
+**Smart Matching Features:**
+- 🧠 Automatically ignore R character differences (user input "15" or "R15" both match)
+- 🔍 Fuzzy matching specification parameters
+- 📊 Return results sorted by price
 
-### 轮胎搜索参数
+### Tire Search Parameters
 
 ```json
 {
-  "width": "155",           // 必需: 轮胎宽度
-  "aspectRatio": "70",      // 可选: 扁平比 (小型轿车)
-  "diameter": "13",         // 可选: 直径
-  "exactMatch": false,      // 可选: 是否精确匹配
-  "limit": 10               // 可选: 返回数量 (1-100，默认10) ✨ **新增**
+  "width": "155",           // Required: Tire width
+  "aspectRatio": "70",      // Optional: Aspect ratio (car tires)
+  "diameter": "13",         // Optional: Diameter
+  "exactMatch": false,      // Optional: Whether to exact match
+  "limit": 10               // Optional: Return count (1-100, default 10) ✨ **New**
 }
 ```
 
-**参数说明:**
-- `width`: 轮胎宽度，必需参数
-- `aspectRatio`: 扁平比，小型轿车轮胎建议提供
-- `diameter`: 轮圈直径，支持"15"或"R15"格式
-- `exactMatch`: 精确匹配模式，默认false
-- `limit`: 返回结果数量，范围1-100，默认10个
+**Parameter Description:**
+- `width`: Tire width, required parameter
+- `aspectRatio`: Aspect ratio, recommended for car tires
+- `diameter`: Rim diameter, supports "15" or "R15" format
+- `exactMatch`: Exact match mode, default false
+- `limit`: Return result count, range 1-100, default 10
 
-## 🛠️ 安装和运行
+## 🛠️ Installation and Running
 
-### 本地开发
+### Local Development
 
-1. 克隆仓库：
+1. Clone repository:
 ```bash
 git clone https://github.com/zhuchenyu876/price-list-api-hub.git
 cd price-list-api-hub
 ```
 
-2. 安装依赖：
+2. Install dependencies:
 ```bash
 npm install
 ```
 
-3. 确保 Excel 文件在根目录：
+3. Ensure Excel file is in root directory:
 ```
 LISTA DE PRECIOS 25062025.xlsx
 ```
 
-4. 启动服务：
+4. Start service:
 ```bash
 npm start
 ```
 
-服务将在 `http://localhost:3000` 启动
+Service will start at `http://localhost:3000`
 
-### 线上访问
+### Online Access
 
-🌐 **部署地址**: `https://price-list-api-hub-zhu.vercel.app`
+🌐 **Deployment URL**: `https://price-list-api-hub-zhu.vercel.app`
 
-## 📝 API 使用示例
+## 📝 API Usage Examples
 
-### 1. 健康检查
+### 1. Health Check
 ```bash
 curl https://price-list-api-hub-zhu.vercel.app/api/price-list/health
 ```
 
-**响应示例:**
+**Response Example:**
 ```json
 {
   "raw": {
@@ -142,15 +142,15 @@ curl https://price-list-api-hub-zhu.vercel.app/api/price-list/health
     "totalRecords": 296,
     "timestamp": "2025-07-02T07:08:25.825Z"
   },
-  "markdown": "| 状态 | 值 |\n|:-----|:---|\n| 服务状态 | 健康 |\n| 数据加载 | 成功 |\n| 产品数量 | 296 |",
+  "markdown": "| Status | Value |\n|:-------|:------|\n| Service Status | Healthy |\n| Data Loaded | Success |\n| Product Count | 296 |",
   "type": "markdown", 
-  "desc": "✅ API 服务运行正常\n📊 已加载 296 条产品数据\n🚗 包含 116 个轮胎产品"
+  "desc": "✅ API service running normally\n📊 Loaded 296 product records\n🚗 Contains 116 tire products"
 }
 ```
 
-### 2. 轮胎规格搜索
+### 2. Tire Specification Search
 
-**标准搜索示例:**
+**Standard Search Example:**
 ```bash
 curl -X POST https://price-list-api-hub-zhu.vercel.app/api/price-list/tire-search \
   -H "Content-Type: application/json" \
@@ -161,7 +161,7 @@ curl -X POST https://price-list-api-hub-zhu.vercel.app/api/price-list/tire-searc
   }'
 ```
 
-**智能格式搜索示例 (新功能):**
+**Smart Format Search Example (New Feature):**
 ```bash
 curl -X POST https://price-list-api-hub-zhu.vercel.app/api/price-list/tire-search \
   -H "Content-Type: application/json" \
@@ -173,7 +173,7 @@ curl -X POST https://price-list-api-hub-zhu.vercel.app/api/price-list/tire-searc
   }'
 ```
 
-**响应示例:**
+**Response Example:**
 ```json
 {
   "raw": {
@@ -195,13 +195,13 @@ curl -X POST https://price-list-api-hub-zhu.vercel.app/api/price-list/tire-searc
       }
     ]
   },
-  "markdown": "| 产品ID | 产品名称 | 库存 | 价格 |\n|:-------|:---------|:-----|:-----|\n| LL-C29834 | 155 70 13 75T MIRAGE MR-166 AUTO | 3 | $932.3616 |",
+  "markdown": "| Product ID | Product Name | Stock | Price |\n|:-----------|:-------------|:------|:------|\n| LL-C29834 | 155 70 13 75T MIRAGE MR-166 AUTO | 3 | $932.3616 |",
   "type": "markdown",
-  "desc": "🔍 轮胎搜索结果 - 小型轿车轮胎 (155/70R13)\n\n📊 搜索统计:\n• 匹配轮胎: 1 个\n• 轮胎类型: 小型轿车\n• 搜索规格: 155/70R13\n\n💰 价格范围: $932.3616 - $932.3616\n\n🏆 推荐轮胎:\n1. 155 70 13 75T MIRAGE MR-166 AUTO - $932.3616"
+  "desc": "🔍 Tire Search Results - Car Tire (155/70R13)\n\n📊 Search Statistics:\n• Matching tires: 1\n• Tire type: Car\n• Search specification: 155/70R13\n\n💰 Price range: $932.3616 - $932.3616\n\n🏆 Recommended tires:\n1. 155 70 13 75T MIRAGE MR-166 AUTO - $932.3616"
 }
 ```
 
-### 3. 产品搜索
+### 3. Product Search
 ```bash
 curl -X POST https://price-list-api-hub-zhu.vercel.app/api/price-list/search \
   -H "Content-Type: application/json" \
@@ -211,16 +211,16 @@ curl -X POST https://price-list-api-hub-zhu.vercel.app/api/price-list/search \
   }'
 ```
 
-### 4. 产品详情查询
+### 4. Product Details Query
 ```bash
 curl https://price-list-api-hub-zhu.vercel.app/api/price-list/product/LL-C29834
 ```
 
-## 🤖 Agent 调用示例
+## 🤖 Agent Call Examples
 
 ### JavaScript/Node.js
 ```javascript
-// 轮胎搜索
+// Tire search
 async function searchTires(width, aspectRatio, diameter) {
   const response = await fetch('https://price-list-api-hub-zhu.vercel.app/api/price-list/tire-search', {
     method: 'POST',
@@ -236,17 +236,17 @@ async function searchTires(width, aspectRatio, diameter) {
 
   const data = await response.json();
   
-  // Agent 可以使用不同格式的数据
-  console.log('结构化数据:', data.raw);           // 程序处理
-  console.log('表格显示:', data.markdown);        // Markdown 渲染
-  console.log('用户描述:', data.desc);            // 用户阅读
+  // Agent can use different formats of data
+  console.log('Structured data:', data.raw);      // Program processing
+  console.log('Table display:', data.markdown);   // Markdown rendering
+  console.log('User description:', data.desc);    // User reading
   
   return data;
 }
 
-// 调用示例
+// Call example
 searchTires("185", "60", "15").then(result => {
-  console.log(`找到 ${result.raw.totalFound} 个轮胎`);
+  console.log(`Found ${result.raw.totalFound} tires`);
 });
 ```
 
@@ -267,120 +267,120 @@ def search_tires(width, aspect_ratio, diameter):
     
     return data
 
-# 调用示例
+# Call example
 result = search_tires("155", "70", "13")
-print(f"找到 {result['raw']['totalFound']} 个匹配轮胎")
+print(f"Found {result['raw']['totalFound']} matching tires")
 ```
 
-## 📊 支持的搜索参数
+## 📊 Supported Search Parameters
 
-### 产品搜索参数
+### Product Search Parameters
 ```json
 {
-  "query": "搜索关键词",      // 通用搜索
-  "productId": "产品ID",     // 精确ID搜索  
-  "productName": "产品名称", // 名称搜索
-  "priceMin": 100,          // 最低价格
-  "priceMax": 500,          // 最高价格
-  "limit": 50               // 结果数量限制
+  "query": "search keyword",    // General search
+  "productId": "product ID",    // Exact ID search  
+  "productName": "product name", // Name search
+  "priceMin": 100,             // Minimum price
+  "priceMax": 500,             // Maximum price
+  "limit": 50                  // Result count limit
 }
 ```
 
-### 轮胎搜索参数
+### Tire Search Parameters
 ```json
 {
-  "width": "155",           // 必需: 宽度
-  "aspectRatio": "70",      // 可选: 扁平比 (小型轿车)
-  "diameter": "13",         // 可选: 直径 (支持"13"或"R13"格式)
-  "exactMatch": false,      // 可选: 精确匹配
-  "limit": 10               // 可选: 返回数量 (1-100，默认10)
+  "width": "155",           // Required: Width
+  "aspectRatio": "70",      // Optional: Aspect ratio (car tires)
+  "diameter": "13",         // Optional: Diameter (supports "13" or "R13" format)
+  "exactMatch": false,      // Optional: Exact match
+  "limit": 10               // Optional: Return count (1-100, default 10)
 }
 ```
 
-## 🗂️ 数据结构
+## 🗂️ Data Structure
 
-### Excel 数据字段
-- **ID Producto**: 产品ID
-- **Producto**: 产品名称  
-- **Costo Uni Unitario**: 单位成本
-- **Exit.**: 库存数量
-- **COSTO CON IVA**: 含税成本
-- **PRECIO FINAL**: 最终价格
+### Excel Data Fields
+- **ID Producto**: Product ID
+- **Producto**: Product Name  
+- **Costo Uni Unitario**: Unit Cost
+- **Exit.**: Stock Quantity
+- **COSTO CON IVA**: Cost with Tax
+- **PRECIO FINAL**: Final Price
 
-### 轮胎产品统计
-- **总产品数**: 296个
-- **轮胎产品**: 116个
-  - 小型轿车轮胎: 114个
-  - 货车轮胎: 2个
+### Tire Product Statistics
+- **Total Products**: 296
+- **Tire Products**: 116
+  - Car Tires: 114
+  - Truck Tires: 2
 
-## 🚀 部署信息
+## 🚀 Deployment Information
 
-- **平台**: Vercel
-- **域名**: `https://price-list-api-hub-zhu.vercel.app`
+- **Platform**: Vercel
+- **Domain**: `https://price-list-api-hub-zhu.vercel.app`
 - **GitHub**: `https://github.com/zhuchenyu876/price-list-api-hub`
-- **自动部署**: 推送到主分支自动触发部署
+- **Auto Deploy**: Automatically triggered when pushing to main branch
 
-## 🛡️ 安全特性
+## 🛡️ Security Features
 
-- **速率限制**: 每15分钟100次请求
-- **CORS**: 跨域资源共享支持
-- **Helmet**: 安全头设置
-- **输入验证**: 参数类型和范围验证
+- **Rate Limiting**: 100 requests per 15 minutes
+- **CORS**: Cross-Origin Resource Sharing support
+- **Helmet**: Security headers configuration
+- **Input Validation**: Parameter type and range validation
 
-## 📚 相关文档
+## 📚 Related Documentation
 
-- `agent-example.js` - Agent 调用示例
-- `test-tire-search.js` - 轮胎搜索测试
-- `API-Hub集成指南.md` - 详细集成指南
-- `使用指南.md` - 完整使用说明
+- `agent-example.js` - Agent call examples
+- `test-tire-search.js` - Tire search testing
+- `API-Hub集成指南.md` - Detailed integration guide
+- `使用指南.md` - Complete usage instructions
 
-## 🧪 测试
+## 🧪 Testing
 
 ```bash
-# 运行所有测试
+# Run all tests
 npm test
 
-# 轮胎搜索测试
+# Tire search testing
 node test-tire-search.js
 
-# API端点测试
+# API endpoint testing
 node test-api.js
 ```
 
-## 技术栈
+## Tech Stack
 
-- **Node.js v22** - 运行时环境
-- **Express.js** - Web 框架
-- **xlsx** - Excel 文件处理
-- **cors** - 跨域资源共享
-- **helmet** - 安全头设置
-- **express-rate-limit** - 请求速率限制
+- **Node.js v22** - Runtime environment
+- **Express.js** - Web framework
+- **xlsx** - Excel file processing
+- **cors** - Cross-Origin Resource Sharing
+- **helmet** - Security headers
+- **express-rate-limit** - Request rate limiting
 
-## 🔄 更新日志
+## 🔄 Update Log
 
-### v1.2.0 (最新) - 轮胎搜索增强
-- ✨ **新增**: 支持"175 65 R15"格式轮胎搜索
-- 🧠 **智能**: R字符自动匹配 ("15" ↔ "R15")
-- 🔢 **新增**: limit参数控制返回数量 (1-100)
-- 🔧 **修复**: 数据显示一致性问题
-- 📊 **优化**: 轮胎搜索结果按价格排序
+### v1.2.0 (Latest) - Tire Search Enhancement
+- ✨ **New**: Support for "175 65 R15" format tire search
+- 🧠 **Smart**: Automatic R character matching ("15" ↔ "R15")
+- 🔢 **New**: limit parameter to control return count (1-100)
+- 🔧 **Fix**: Data display consistency issues
+- 📊 **Optimize**: Tire search results sorted by price
 
-### v1.1.0 - API Hub格式
-- 🤖 **新增**: Agent标准响应格式
-- 📋 **新增**: Markdown表格输出
-- 📝 **新增**: 详细描述信息
-- 🔍 **优化**: 搜索算法改进
+### v1.1.0 - API Hub Format
+- 🤖 **New**: Agent standard response format
+- 📋 **New**: Markdown table output
+- 📝 **New**: Detailed description information
+- 🔍 **Optimize**: Search algorithm improvements
 
-### v1.0.0 - 基础功能
-- 📊 Excel数据处理
-- 🔍 产品搜索功能
-- 🚗 轮胎规格搜索
-- 🚀 RESTful API接口
+### v1.0.0 - Basic Features
+- 📊 Excel data processing
+- 🔍 Product search functionality
+- 🚗 Tire specification search
+- 🚀 RESTful API interfaces
 
-## 许可证
+## License
 
 MIT License
 
-## 联系方式
+## Contact
 
-如有问题，请创建 [GitHub Issue](https://github.com/zhuchenyu876/price-list-api-hub/issues)。 
+For any questions, please create a [GitHub Issue](https://github.com/zhuchenyu876/price-list-api-hub/issues). 
