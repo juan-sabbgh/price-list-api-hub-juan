@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const XLSX = require('xlsx');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
@@ -29,16 +30,32 @@ let priceListData = [];
 // 读取Excel文件
 function loadExcelData() {
   try {
-    const workbook = XLSX.readFile('LISTA DE PRECIOS 25062025.xlsx');
+    // 使用绝对路径确保在Vercel环境中能找到文件
+    const excelPath = path.join(__dirname, 'LISTA DE PRECIOS 25062025.xlsx');
+    console.log('尝试加载Excel文件:', excelPath);
+    
+    const workbook = XLSX.readFile(excelPath);
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
     
     // 转换为JSON格式
     priceListData = XLSX.utils.sheet_to_json(worksheet);
     console.log(`成功加载 ${priceListData.length} 条数据`);
+    console.log('数据样本:', priceListData.slice(0, 2));
     return true;
   } catch (error) {
     console.error('加载Excel文件失败:', error.message);
+    console.error('当前工作目录:', process.cwd());
+    console.error('__dirname:', __dirname);
+    
+    // 尝试列出当前目录的文件
+    try {
+      const files = fs.readdirSync(process.cwd());
+      console.error('当前目录文件:', files.filter(f => f.includes('.xlsx')));
+    } catch (fsError) {
+      console.error('无法读取目录:', fsError.message);
+    }
+    
     return false;
   }
 }
