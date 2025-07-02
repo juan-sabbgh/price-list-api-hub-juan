@@ -30,6 +30,7 @@ This is an API integration center based on Node.js and Express, designed specifi
 
 #### 🚗 Tire Specific Endpoints
 - `POST /api/price-list/tire-search` - Tire specification search
+- `POST /api/price-list/tire-search-es` - Tire specification search (Spanish)
 - `POST /api/price-list/tire-parse` - Tire specification parsing test
 
 ## 🔧 Agent Response Format
@@ -150,6 +151,7 @@ curl https://price-list-api-hub-zhu.vercel.app/api/price-list/health
 
 ### 2. Tire Specification Search
 
+#### English Version (`/tire-search`)
 **Standard Search Example:**
 ```bash
 curl -X POST https://price-list-api-hub-zhu.vercel.app/api/price-list/tire-search \
@@ -173,7 +175,20 @@ curl -X POST https://price-list-api-hub-zhu.vercel.app/api/price-list/tire-searc
   }'
 ```
 
-**Response Example:**
+#### Spanish Version (`/tire-search-es`)
+**Búsqueda de Neumáticos en Español:**
+```bash
+curl -X POST https://price-list-api-hub-zhu.vercel.app/api/price-list/tire-search-es \
+  -H "Content-Type: application/json" \
+  -d '{
+    "width": "175",
+    "aspect_ratio": "65", 
+    "rim_diameter": "15",
+    "limit": 10
+  }'
+```
+
+**Response Example (English):**
 ```json
 {
   "raw": {
@@ -201,6 +216,21 @@ curl -X POST https://price-list-api-hub-zhu.vercel.app/api/price-list/tire-searc
 }
 ```
 
+**Response Example (Spanish):**
+```json
+{
+  "raw": {
+    "searchType": "car",
+    "searchSpec": "175/65R15",
+    "totalFound": 2,
+    "results": [...]
+  },
+  "markdown": "| ID Producto | Nombre del Producto | Stock | Precio |\n|:------------|:--------------------|:------|:-------|\n| ...",
+  "type": "markdown",
+  "desc": "🔍 Resultados de Búsqueda de Neumáticos - Neumático de Auto (175/65R15)\n\n📊 Estadísticas de Búsqueda:\n• Neumáticos encontrados: 2\n• Cantidad mostrada: 2\n• Tipo de neumático: Auto\n• Especificación de búsqueda: 175/65R15\n\n💰 Rango de precios: $1234.56 - $1456.78\n\n🏆 Neumáticos recomendados:\n1. 175 65 R15 84H SAFERICH FRC16 - $1234.56\n2. 175 65 R15 84H WANLI SP601 - $1456.78"
+}
+```
+
 ### 3. Product Search
 ```bash
 curl -X POST https://price-list-api-hub-zhu.vercel.app/api/price-list/search \
@@ -220,7 +250,7 @@ curl https://price-list-api-hub-zhu.vercel.app/api/price-list/product/LL-C29834
 
 ### JavaScript/Node.js
 ```javascript
-// Tire search
+// Tire search (English)
 async function searchTires(width, aspectRatio, diameter) {
   const response = await fetch('https://price-list-api-hub-zhu.vercel.app/api/price-list/tire-search', {
     method: 'POST',
@@ -244,9 +274,38 @@ async function searchTires(width, aspectRatio, diameter) {
   return data;
 }
 
+// Tire search (Spanish)
+async function searchTiresSpanish(width, aspectRatio, diameter) {
+  const response = await fetch('https://price-list-api-hub-zhu.vercel.app/api/price-list/tire-search-es', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      width: width,
+      aspect_ratio: aspectRatio,
+      rim_diameter: diameter
+    })
+  });
+
+  const data = await response.json();
+  
+  // Agent can use different formats of data
+  console.log('Datos estructurados:', data.raw);      // Program processing
+  console.log('Visualización de tabla:', data.markdown);   // Markdown rendering
+  console.log('Descripción para usuario:', data.desc);    // User reading
+  
+  return data;
+}
+
 // Call example
 searchTires("185", "60", "15").then(result => {
   console.log(`Found ${result.raw.totalFound} tires`);
+});
+
+// Spanish call example
+searchTiresSpanish("175", "65", "15").then(result => {
+  console.log(`Se encontraron ${result.raw.totalFound} neumáticos`);
 });
 ```
 
@@ -254,6 +313,7 @@ searchTires("185", "60", "15").then(result => {
 ```python
 import requests
 
+# English version
 def search_tires(width, aspect_ratio, diameter):
     url = "https://price-list-api-hub-zhu.vercel.app/api/price-list/tire-search"
     payload = {
@@ -267,9 +327,27 @@ def search_tires(width, aspect_ratio, diameter):
     
     return data
 
+# Spanish version
+def search_tires_spanish(width, aspect_ratio, diameter):
+    url = "https://price-list-api-hub-zhu.vercel.app/api/price-list/tire-search-es"
+    payload = {
+        "width": width,
+        "aspect_ratio": aspect_ratio, 
+        "rim_diameter": diameter
+    }
+    
+    response = requests.post(url, json=payload)
+    data = response.json()
+    
+    return data
+
 # Call example
 result = search_tires("155", "70", "13")
 print(f"Found {result['raw']['totalFound']} matching tires")
+
+# Spanish call example  
+resultado = search_tires_spanish("175", "65", "15")
+print(f"Se encontraron {resultado['raw']['totalFound']} neumáticos coincidentes")
 ```
 
 ## 📊 Supported Search Parameters
