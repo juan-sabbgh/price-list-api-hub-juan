@@ -89,6 +89,19 @@ function parseTireSpecification(productName) {
     return specs;
   }
 
+  // 新增：小型轿车轮胎格式: 175 65 R15 84H SAFERICH FRC16
+  // 格式: 宽度 扁平比 R直径 [其他信息]
+  const carTireWithRPattern = /^(\d{3})\s+(\d{2})\s+R(\d{2})\s/;
+  const carWithRMatch = name.match(carTireWithRPattern);
+  
+  if (carWithRMatch) {
+    specs.width = parseInt(carWithRMatch[1]);
+    specs.aspect_ratio = parseInt(carWithRMatch[2]);
+    specs.rim_diameter = parseInt(carWithRMatch[3]);
+    specs.type = 'car';
+    return specs;
+  }
+
   // 货车轮胎格式: 1100 R22 T-2400 14/C
   // 格式: 宽度 R直径 [其他信息]
   const truckTirePattern = /^(\d{3,4})\s+R(\d{2})\s/;
@@ -547,12 +560,26 @@ app.post('/api/price-list/tire-search', (req, res) => {
         } else {
           // 允许一定的规格范围匹配
           const aspectMatch = !finalAspectRatio || Math.abs(specs.aspect_ratio - finalAspectRatio) <= 5;
-          const rimMatch = !finalRimDiameter || specs.rim_diameter == finalRimDiameter;
+          
+          // 直径匹配：智能匹配，忽略R字符
+          // 无论用户输入15还是R15，都应该匹配到15和R15
+          let rimMatch = true;
+          if (finalRimDiameter) {
+            const userDiameter = parseInt(String(finalRimDiameter).replace(/[rR]/g, ''));
+            const productDiameter = parseInt(String(specs.rim_diameter).replace(/[rR]/g, ''));
+            rimMatch = userDiameter === productDiameter;
+          }
+          
           return aspectMatch && rimMatch;
         }
       } else {
         // 货车：只需要匹配宽度和直径
-        return !finalRimDiameter || specs.rim_diameter == finalRimDiameter;
+        if (!finalRimDiameter) return true;
+        
+        // 直径匹配：智能匹配，忽略R字符
+        const userDiameter = parseInt(String(finalRimDiameter).replace(/[rR]/g, ''));
+        const productDiameter = parseInt(String(specs.rim_diameter).replace(/[rR]/g, ''));
+        return userDiameter === productDiameter;
       }
     });
 
