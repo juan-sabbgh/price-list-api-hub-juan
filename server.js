@@ -113,6 +113,8 @@ app.get('/', (req, res) => {
           '/api/price-list/health': 'GET - 健康检查',
           '/api/price-list/products': 'GET - 获取所有产品',
           '/api/price-list/search': 'POST - 搜索产品',
+          '/api/price-list/tire-search': 'POST - 轮胎规格搜索',
+          '/api/price-list/tire-parse': 'POST - 轮胎规格解析',
           '/api/price-list/product/:id': 'GET - 根据产品ID获取产品信息',
           '/api/price-list/reload': 'POST - 重新加载Excel数据'
         }
@@ -134,6 +136,8 @@ app.get('/api/price-list', (req, res) => {
       '/api/price-list/health': 'GET - 健康检查',
       '/api/price-list/products': 'GET - 获取所有产品',
       '/api/price-list/search': 'POST - 搜索产品',
+      '/api/price-list/tire-search': 'POST - 轮胎规格搜索',
+      '/api/price-list/tire-parse': 'POST - 轮胎规格解析',
       '/api/price-list/product/:id': 'GET - 根据产品ID获取产品信息',
       '/api/price-list/reload': 'POST - 重新加载Excel数据'
     },
