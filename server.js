@@ -337,7 +337,8 @@ app.post('/api/price-list/search', (req, res) => {
     // Markdown表格格式
     let markdownTable = "| 产品ID | 产品名称 | 库存 | 最终价格 |\n|:-------|:---------|:-----|:--------|\n";
     if (results.length > 0) {
-      results.slice(0, 5).forEach(item => {
+      // 保持与raw.results一致，显示最多10个结果
+      results.slice(0, 10).forEach(item => {
         markdownTable += `| ${item['ID Producto']} | ${item['Producto']} | ${item['Exit.']} | $${item['PRECIO FINAL']} |\n`;
       });
     } else {
@@ -500,7 +501,8 @@ app.post('/api/price-list/tire-search', (req, res) => {
       aspectRatio, 
       rim_diameter, 
       diameter, 
-      exact_match = false 
+      exact_match = false,
+      limit = 10  // 新增：用户可指定返回数量，默认10个
     } = req.body;
     
     // 参数映射处理
@@ -513,18 +515,33 @@ app.post('/api/price-list/tire-search', (req, res) => {
         success: false,
         error: '轮胎宽度(width)是必需参数',
         usage: {
-          car: '小型轿车: { "width": 155, "aspect_ratio": 70, "rim_diameter": 13 }',
-          truck: '货车: { "width": 1100, "rim_diameter": 22 }'
+          car: '小型轿车: { "width": 155, "aspect_ratio": 70, "rim_diameter": 13, "limit": 20 }',
+          truck: '货车: { "width": 1100, "rim_diameter": 22, "limit": 20 }'
+        },
+        parameters: {
+          width: '必需 - 轮胎宽度',
+          aspect_ratio: '可选 - 扁平比（小型轿车）',
+          rim_diameter: '可选 - 直径',
+          exact_match: '可选 - 是否精确匹配（默认false）',
+          limit: '可选 - 返回结果数量（1-100，默认10）'
         },
         examples: {
           car_search: {
             width: 155,
             aspect_ratio: 70,
-            rim_diameter: 13
+            rim_diameter: 13,
+            limit: 20
           },
           truck_search: {
             width: 1100,
-            rim_diameter: 22
+            rim_diameter: 22,
+            limit: 50
+          },
+          show_all: {
+            width: 185,
+            aspect_ratio: 55,
+            rim_diameter: 15,
+            limit: 100
           }
         }
       });
@@ -596,12 +613,15 @@ app.post('/api/price-list/tire-search', (req, res) => {
       ? `${width}/${finalAspectRatio}R${finalRimDiameter}`
       : `${width}R${finalRimDiameter}`;
     
+    // 应用用户指定的结果数量限制
+    const resultLimit = Math.min(Math.max(parseInt(limit) || 10, 1), 100); // 1-100范围，默认10
+    
     // 原始数据
     const rawData = {
       searchType: searchType,
       searchSpec: searchSpec,
       totalFound: matchingTires.length,
-      results: matchingTires.slice(0, 10).map(tire => ({
+      results: matchingTires.slice(0, resultLimit).map(tire => ({
         id: tire['ID Producto'],
         product: tire['Producto'],
         stock: tire['Exit.'],
@@ -613,7 +633,8 @@ app.post('/api/price-list/tire-search', (req, res) => {
         aspectRatio: finalAspectRatio || null,
         diameter: finalRimDiameter || null,
         type: searchType,
-        exactMatch: exact_match
+        exactMatch: exact_match,
+        limit: resultLimit
       },
       statistics: {
         totalTireProducts: tireProducts.length,
@@ -625,7 +646,8 @@ app.post('/api/price-list/tire-search', (req, res) => {
     // Markdown表格格式
     let markdownTable = "| 产品ID | 产品名称 | 库存 | 价格 |\n|:-------|:---------|:-----|:-----|\n";
     if (matchingTires.length > 0) {
-      matchingTires.slice(0, 5).forEach(tire => {
+      // 使用用户指定的结果数量限制
+      matchingTires.slice(0, resultLimit).forEach(tire => {
         markdownTable += `| ${tire['ID Producto']} | ${tire['Producto']} | ${tire['Exit.']} | $${tire['PRECIO FINAL']} |\n`;
       });
     } else {
@@ -636,6 +658,7 @@ app.post('/api/price-list/tire-search', (req, res) => {
     let description = `🔍 轮胎搜索结果 - ${tireType}轮胎 (${searchSpec})\n\n`;
     description += `📊 搜索统计:\n`;
     description += `• 匹配轮胎: ${matchingTires.length} 个\n`;
+    description += `• 显示数量: ${Math.min(matchingTires.length, resultLimit)} 个\n`;
     description += `• 轮胎类型: ${tireType}\n`;
     description += `• 搜索规格: ${searchSpec}\n\n`;
     
