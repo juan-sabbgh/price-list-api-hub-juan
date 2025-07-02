@@ -5,7 +5,9 @@
 ## 功能特点
 
 - 📊 **Excel 数据处理**: 自动读取和解析 Excel 文件
-- 🔍 **三参数搜索**: 支持通过三个参数进行数据查询
+- 🔍 **智能搜索**: 支持通用产品搜索和多参数查询
+- 🚗 **轮胎规格搜索**: 专业的轮胎规格匹配系统（新功能）
+- 🔬 **智能解析**: 自动解析轮胎产品规格参数
 - 🚀 **RESTful API**: 提供标准的 REST API 接口
 - 🛡️ **安全性**: 包含速率限制、CORS 和安全头设置
 - 📱 **Agent 友好**: 专为 AI Agent 调用设计
@@ -21,6 +23,12 @@
 - `POST /api/product/search` - 搜索产品（输入查询字符串）
 - `GET /api/product/code/:codigo` - 根据产品代码获取产品信息
 - `POST /api/reload` - 重新加载 Excel 数据
+
+### 🚗 轮胎规格搜索端点 (新功能)
+- `POST /api/price-list/tire-search` - 轮胎规格搜索
+  - 小型轿车: `{ "width": 155, "aspect_ratio": 70, "rim_diameter": 13 }`
+  - 货车: `{ "width": 1100, "rim_diameter": 22 }`
+- `POST /api/price-list/tire-parse` - 轮胎规格解析测试
 
 ## 输入参数和输出参数
 

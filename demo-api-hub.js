@@ -129,6 +129,86 @@ async function demoApiHub() {
       } else {
         console.log(`❌ 查询失败: ${productDetail.message}`);
       }
+      console.log('');
+
+      // 7. 🚗 轮胎规格搜索演示 (新功能)
+      console.log('7️⃣ 轮胎规格搜索演示');
+      
+      // 小型轿车轮胎搜索
+      console.log('🚙 搜索小型轿车轮胎 155/70R13:');
+      const carTireSearch = await makeRequest('POST', `${PRICE_LIST_MODULE}/tire-search`, {
+        width: 155,
+        aspect_ratio: 70,
+        rim_diameter: 13
+      });
+      
+      if (carTireSearch.success) {
+        console.log(`✅ 轮胎搜索成功: ${carTireSearch.message}`);
+        console.log(`📊 统计: 轮胎产品总数 ${carTireSearch.statistics.total_tire_products}, 小型轿车 ${carTireSearch.statistics.car_tires}, 货车 ${carTireSearch.statistics.truck_tires}`);
+        if (carTireSearch.results && carTireSearch.results.length > 0) {
+          console.log('📋 找到的轮胎:');
+          carTireSearch.results.slice(0, 2).forEach((tire, index) => {
+            const specs = tire.tire_specs;
+            const specStr = `${specs.width}/${specs.aspect_ratio}R${specs.rim_diameter}`;
+            console.log(`${index + 1}. ID: ${tire['ID Producto']}`);
+            console.log(`   产品: ${tire['Producto']}`);
+            console.log(`   规格: ${specStr}`);
+            console.log(`   价格: $${tire['PRECIO FINAL']}`);
+          });
+        }
+      } else {
+        console.log(`❌ 轮胎搜索失败: ${carTireSearch.error}`);
+      }
+      console.log('');
+      
+      // 货车轮胎搜索
+      console.log('🚛 搜索货车轮胎 1100R22:');
+      const truckTireSearch = await makeRequest('POST', `${PRICE_LIST_MODULE}/tire-search`, {
+        width: 1100,
+        rim_diameter: 22
+      });
+      
+      if (truckTireSearch.success) {
+        console.log(`✅ 轮胎搜索成功: ${truckTireSearch.message}`);
+        if (truckTireSearch.results && truckTireSearch.results.length > 0) {
+          console.log('📋 找到的轮胎:');
+          truckTireSearch.results.forEach((tire, index) => {
+            const specs = tire.tire_specs;
+            const specStr = `${specs.width}R${specs.rim_diameter}`;
+            console.log(`${index + 1}. ID: ${tire['ID Producto']}`);
+            console.log(`   产品: ${tire['Producto']}`);
+            console.log(`   规格: ${specStr}`);
+            console.log(`   价格: $${tire['PRECIO FINAL']}`);
+          });
+        }
+      } else {
+        console.log(`❌ 轮胎搜索失败: ${truckTireSearch.error}`);
+      }
+      console.log('');
+
+      // 8. 🔬 轮胎规格解析演示
+      console.log('8️⃣ 轮胎规格解析演示');
+      const testProductNames = [
+        '155 70 13 75T MIRAGE MR-166 AUTO',
+        '1100 R22 T-2400 14/C'
+      ];
+      
+      for (const productName of testProductNames) {
+        console.log(`🔍 解析产品: "${productName}"`);
+        const parseResult = await makeRequest('POST', `${PRICE_LIST_MODULE}/tire-parse`, {
+          product_name: productName
+        });
+        
+        if (parseResult.success && parseResult.parsed_specs.width) {
+          const specs = parseResult.parsed_specs;
+          const specStr = specs.aspect_ratio 
+            ? `${specs.width}/${specs.aspect_ratio}R${specs.rim_diameter}`
+            : `${specs.width}R${specs.rim_diameter}`;
+          console.log(`   ✅ 解析成功: ${specStr} (${specs.type === 'car' ? '小型轿车' : '货车'})`);
+        } else {
+          console.log(`   ❌ 解析失败`);
+        }
+      }
     }
 
   } catch (error) {
@@ -142,12 +222,15 @@ async function demoApiHub() {
   console.log('- 价格清单模块: GET /api/price-list');
   console.log('- 健康检查: GET /api/price-list/health');
   console.log('- 搜索产品: POST /api/price-list/search { "query": "关键词" }');
+  console.log('- 🚗 轮胎规格搜索: POST /api/price-list/tire-search { "width": 155, "aspect_ratio": 70, "rim_diameter": 13 }');
+  console.log('- 🔬 轮胎规格解析: POST /api/price-list/tire-parse { "product_name": "产品名称" }');
   console.log('- 查询产品: GET /api/price-list/product/产品ID');
   console.log('- 获取所有: GET /api/price-list/products');
   console.log('');
   console.log('🌐 远程访问示例:');
   console.log('- https://api-hub-sigma.vercel.app/api/price-list/health');
   console.log('- https://api-hub-sigma.vercel.app/api/price-list/search');
+  console.log('- https://api-hub-sigma.vercel.app/api/price-list/tire-search');
   console.log('- https://api-hub-sigma.vercel.app/api/price-list/product/CCCC137');
 }
 

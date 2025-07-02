@@ -23,6 +23,8 @@ GET https://api-hub-sigma.vercel.app/
         "/api/price-list/health": "GET - 健康检查",
         "/api/price-list/products": "GET - 获取所有产品",
         "/api/price-list/search": "POST - 搜索产品",
+        "/api/price-list/tire-search": "POST - 轮胎规格搜索",
+        "/api/price-list/tire-parse": "POST - 轮胎规格解析",
         "/api/price-list/product/:id": "GET - 根据产品ID获取产品信息",
         "/api/price-list/reload": "POST - 重新加载Excel数据"
       }
@@ -94,7 +96,65 @@ GET https://api-hub-sigma.vercel.app/api/price-list/product/CCCC137
 GET https://api-hub-sigma.vercel.app/api/price-list/products
 ```
 
-#### 6. 重新加载数据 🔄
+#### 6. 🚗 轮胎规格搜索 (新功能)
+```
+POST https://api-hub-sigma.vercel.app/api/price-list/tire-search
+Content-Type: application/json
+
+# 小型轿车轮胎搜索（3参数）
+{
+  "width": 155,
+  "aspect_ratio": 70,
+  "rim_diameter": 13
+}
+
+# 货车轮胎搜索（2参数）
+{
+  "width": 1100,
+  "rim_diameter": 22
+}
+```
+
+**响应:**
+```json
+{
+  "success": true,
+  "message": "找到 1 个匹配的小型轿车轮胎",
+  "search_params": {
+    "width": 155,
+    "aspect_ratio": 70,
+    "rim_diameter": 13,
+    "type": "car"
+  },
+  "results": [
+    {
+      "ID Producto": "LL-C29834",
+      "Producto": "155 70 13 75T MIRAGE MR-166 AUTO",
+      "Exit.": 3,
+      "PRECIO FINAL": 932.36,
+      "tire_specs": {
+        "width": 155,
+        "aspect_ratio": 70,
+        "rim_diameter": 13,
+        "type": "car"
+      }
+    }
+  ],
+  "total": 1
+}
+```
+
+#### 7. 🔬 轮胎规格解析
+```
+POST https://api-hub-sigma.vercel.app/api/price-list/tire-parse
+Content-Type: application/json
+
+{
+  "product_name": "155 70 13 75T MIRAGE MR-166 AUTO"
+}
+```
+
+#### 8. 重新加载数据 🔄
 ```
 POST https://api-hub-sigma.vercel.app/api/price-list/reload
 ```

@@ -81,6 +81,95 @@ class PriceListAgent {
   }
 
   /**
+   * 🚗 轮胎规格搜索 (新功能)
+   * @param {Object} tireSpecs - 轮胎规格参数
+   * @param {number} tireSpecs.width - 轮胎宽度 (必须)
+   * @param {number} [tireSpecs.aspect_ratio] - 扁平比 (小型轿车必须)
+   * @param {number} [tireSpecs.rim_diameter] - 轮辋直径
+   * @param {boolean} [tireSpecs.exact_match] - 是否精确匹配
+   * @returns {Promise<Array>} 匹配的轮胎产品
+   */
+  async searchTireBySpecs(tireSpecs) {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/price-list/tire-search`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(tireSpecs)
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        const tireType = data.search_params.type === 'car' ? '小型轿车' : '货车';
+        console.log(`✅ 轮胎搜索成功: 找到 ${data.total} 个匹配的${tireType}轮胎`);
+        return data.results;
+      } else {
+        console.log(`❌ 轮胎搜索失败: ${data.error}`);
+        return [];
+      }
+    } catch (error) {
+      console.error('轮胎搜索API调用错误:', error);
+      return [];
+    }
+  }
+
+  /**
+   * 🔬 轮胎规格解析
+   * @param {string} productName - 产品名称
+   * @returns {Promise<Object|null>} 解析的轮胎规格
+   */
+  async parseTireSpecs(productName) {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/price-list/tire-parse`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ product_name: productName })
+      });
+
+      const data = await response.json();
+      
+      if (data.success && data.parsed_specs.width) {
+        console.log(`✅ 轮胎规格解析成功: ${data.parsed_specs.type === 'car' ? '小型轿车' : '货车'}轮胎`);
+        return data.parsed_specs;
+      } else {
+        console.log(`❌ 无法解析轮胎规格: ${productName}`);
+        return null;
+      }
+    } catch (error) {
+      console.error('轮胎解析API调用错误:', error);
+      return null;
+    }
+  }
+
+  /**
+   * 格式化轮胎产品信息显示
+   * @param {Object} tire - 轮胎产品信息
+   * @returns {string} 格式化的轮胎信息
+   */
+  formatTireInfo(tire) {
+    if (!tire) return '未找到轮胎信息';
+    
+    const specs = tire.tire_specs;
+    const specStr = specs.aspect_ratio 
+      ? `${specs.width}/${specs.aspect_ratio}R${specs.rim_diameter}`
+      : `${specs.width}R${specs.rim_diameter}`;
+    
+    return `
+🚗 轮胎信息:
+   ID: ${tire['ID Producto']}
+   产品: ${tire['Producto']}
+   规格: ${specStr}
+   类型: ${specs.type === 'car' ? '小型轿车' : '货车'}
+   库存: ${tire['Exit.']}
+   价格: $${tire['PRECIO FINAL']}
+    `.trim();
+  }
+
+  /**
    * 检查API服务状态
    * @returns {Promise<boolean>} 服务是否正常
    */
@@ -138,6 +227,58 @@ async function main() {
     if (productDetail) {
       console.log('📦 产品详情:');
       console.log(agent.formatProductInfo(productDetail));
+    }
+  }
+  console.log('');
+  
+  // 4. 🚗 轮胎规格搜索示例 (新功能)
+  console.log('4️⃣ 轮胎规格搜索示例');
+  
+  // 小型轿车轮胎搜索
+  console.log('🚙 搜索小型轿车轮胎 155/70R13:');
+  const carTires = await agent.searchTireBySpecs({
+    width: 155,
+    aspect_ratio: 70,
+    rim_diameter: 13
+  });
+  if (carTires.length > 0) {
+    console.log('📋 找到的轮胎:');
+    carTires.slice(0, 2).forEach((tire, index) => {
+      console.log(`${index + 1}. ${agent.formatTireInfo(tire)}`);
+    });
+  }
+  console.log('');
+  
+  // 货车轮胎搜索
+  console.log('🚛 搜索货车轮胎 1100R22:');
+  const truckTires = await agent.searchTireBySpecs({
+    width: 1100,
+    rim_diameter: 22
+  });
+  if (truckTires.length > 0) {
+    console.log('📋 找到的轮胎:');
+    truckTires.forEach((tire, index) => {
+      console.log(`${index + 1}. ${agent.formatTireInfo(tire)}`);
+    });
+  }
+  console.log('');
+  
+  // 5. 🔬 轮胎规格解析示例
+  console.log('5️⃣ 轮胎规格解析示例');
+  const testProductNames = [
+    '155 70 13 75T MIRAGE MR-166 AUTO',
+    '1100 R22 T-2400 14/C',
+    '165 65 14 79T MIRAGE MR-166'
+  ];
+  
+  for (const productName of testProductNames) {
+    console.log(`🔍 解析: "${productName}"`);
+    const specs = await agent.parseTireSpecs(productName);
+    if (specs) {
+      const specStr = specs.aspect_ratio 
+        ? `${specs.width}/${specs.aspect_ratio}R${specs.rim_diameter}`
+        : `${specs.width}R${specs.rim_diameter}`;
+      console.log(`   📏 规格: ${specStr} (${specs.type === 'car' ? '小型轿车' : '货车'})`);
     }
   }
   
