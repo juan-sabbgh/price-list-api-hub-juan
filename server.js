@@ -293,9 +293,21 @@ app.post('/api/price-list/search', (req, res) => {
       return priceA - priceB;
     });
 
-    res.json({
-      success: true,
-      message: results.length > 0 ? '搜索成功' : '未找到匹配的产品',
+    // 格式化为统一的Agent响应格式
+    const searchQuery = query || productId || productName || `价格${priceMin || 0}-${priceMax || '∞'}`;
+    
+    // 原始数据
+    const rawData = {
+      totalFound: results.length,
+      searchQuery: searchQuery,
+      results: results.slice(0, 10).map(item => ({
+        id: item['ID Producto'],
+        product: item['Producto'],
+        unitCost: item['Costo Uni Unitario'],
+        stock: item['Exit.'],
+        costWithTax: item['COSTO CON IVA'],
+        finalPrice: item['PRECIO FINAL']
+      })),
       searchParams: {
         query: query || null,
         productId: productId || null,
@@ -306,9 +318,50 @@ app.post('/api/price-list/search', (req, res) => {
         },
         limit: limitNum
       },
-      results: results,
-      total: results.length,
       isLimited: priceListData.length > limitNum && results.length === limitNum
+    };
+
+    // Markdown表格格式
+    let markdownTable = "| 产品ID | 产品名称 | 库存 | 最终价格 |\n|:-------|:---------|:-----|:--------|\n";
+    if (results.length > 0) {
+      results.slice(0, 5).forEach(item => {
+        markdownTable += `| ${item['ID Producto']} | ${item['Producto']} | ${item['Exit.']} | $${item['PRECIO FINAL']} |\n`;
+      });
+    } else {
+      markdownTable += "| - | 未找到匹配产品 | - | - |\n";
+    }
+
+    // 描述信息
+    let description = `🔍 产品搜索结果\n\n`;
+    description += `📊 搜索统计:\n`;
+    description += `• 找到产品: ${results.length} 个\n`;
+    description += `• 搜索关键词: ${searchQuery}\n\n`;
+    
+    if (results.length > 0) {
+      const prices = results.map(item => parseFloat(item['PRECIO FINAL']) || 0).sort((a, b) => a - b);
+      description += `💰 价格范围: $${prices[0]} - $${prices[prices.length-1]}\n\n`;
+      description += `🏆 推荐产品:\n`;
+      results.slice(0, 3).forEach((item, index) => {
+        description += `${index + 1}. ${item['Producto']} - $${item['PRECIO FINAL']}\n`;
+      });
+      
+      if (results.length > 3) {
+        description += `\n... 还有 ${results.length - 3} 个其他产品`;
+      }
+    } else {
+      description += `❌ 未找到匹配的产品\n`;
+      description += `💡 建议:\n`;
+      description += `• 检查搜索关键词拼写\n`;
+      description += `• 尝试使用更通用的关键词\n`;
+      description += `• 使用产品ID进行精确搜索`;
+    }
+
+    // 返回统一格式
+    res.json({
+      raw: rawData,
+      markdown: markdownTable,
+      type: "markdown",
+      desc: description
     });
 
   } catch (error) {
@@ -338,17 +391,69 @@ app.get('/api/price-list/product/:id', (req, res) => {
     );
 
     if (product) {
+      // 格式化为统一的Agent响应格式
+      const rawData = {
+        id: product['ID Producto'],
+        product: product['Producto'],
+        unitCost: product['Costo Uni Unitario'],
+        stock: product['Exit.'],
+        costWithTax: product['COSTO CON IVA'],
+        finalPrice: product['PRECIO FINAL'],
+        searchedId: id
+      };
+
+      // Markdown表格格式
+      const markdownTable = "| 字段 | 值 |\n|:-----|:---|\n" +
+        `| 产品ID | ${product['ID Producto']} |\n` +
+        `| 产品名称 | ${product['Producto']} |\n` +
+        `| 单位成本 | $${product['Costo Uni Unitario']} |\n` +
+        `| 库存 | ${product['Exit.']} |\n` +
+        `| 含税成本 | $${product['COSTO CON IVA']} |\n` +
+        `| 最终价格 | $${product['PRECIO FINAL']} |`;
+
+      // 描述信息
+      const description = `🔍 产品详情查询结果\n\n` +
+        `📦 产品信息:\n` +
+        `• 产品ID: ${product['ID Producto']}\n` +
+        `• 产品名称: ${product['Producto']}\n` +
+        `• 库存状态: ${product['Exit.']}\n` +
+        `• 最终价格: $${product['PRECIO FINAL']}\n\n` +
+        `💰 价格明细:\n` +
+        `• 单位成本: $${product['Costo Uni Unitario']}\n` +
+        `• 含税成本: $${product['COSTO CON IVA']}\n` +
+        `• 最终售价: $${product['PRECIO FINAL']}\n\n` +
+        `✅ 产品可用，可以进行订购或询价。`;
+
       res.json({
-        success: true,
-        message: '产品查询成功',
-        id: id,
-        producto: product
+        raw: rawData,
+        markdown: markdownTable,
+        type: "markdown",
+        desc: description
       });
     } else {
+      // 未找到产品的统一格式
+      const rawData = {
+        searchedId: id,
+        found: false,
+        error: "Product not found"
+      };
+
+      const markdownTable = "| 字段 | 值 |\n|:-----|:---|\n" +
+        `| 搜索ID | ${id} |\n` +
+        `| 状态 | 未找到 |`;
+
+      const description = `❌ 产品查询失败\n\n` +
+        `🔍 搜索的产品ID: ${id}\n\n` +
+        `💡 建议:\n` +
+        `• 检查产品ID是否正确\n` +
+        `• 使用产品搜索功能查找相似产品\n` +
+        `• 联系客服确认产品信息`;
+
       res.status(404).json({
-        success: false,
-        message: '未找到指定ID的产品',
-        id: id
+        raw: rawData,
+        markdown: markdownTable,
+        type: "markdown",
+        desc: description
       });
     }
 
@@ -375,7 +480,19 @@ app.post('/api/price-list/reload', (req, res) => {
 // 轮胎规格搜索API
 app.post('/api/price-list/tire-search', (req, res) => {
   try {
-    const { width, aspect_ratio, rim_diameter, exact_match = false } = req.body;
+    // 支持两种参数格式以保持兼容性
+    const { 
+      width, 
+      aspect_ratio, 
+      aspectRatio, 
+      rim_diameter, 
+      diameter, 
+      exact_match = false 
+    } = req.body;
+    
+    // 参数映射处理
+    const finalAspectRatio = aspect_ratio || aspectRatio;
+    const finalRimDiameter = rim_diameter || diameter;
     
     // 参数验证
     if (!width) {
@@ -401,9 +518,9 @@ app.post('/api/price-list/tire-search', (req, res) => {
     }
 
     // 确定搜索类型
-    const searchType = aspect_ratio ? 'car' : 'truck';
+    const searchType = finalAspectRatio ? 'car' : 'truck';
     
-    console.log(`🔍 轮胎规格搜索: ${searchType} - 宽度:${width}, 扁平比:${aspect_ratio || 'N/A'}, 直径:${rim_diameter || 'N/A'}`);
+    console.log(`🔍 轮胎规格搜索: ${searchType} - 宽度:${width}, 扁平比:${finalAspectRatio || 'N/A'}, 直径:${finalRimDiameter || 'N/A'}`);
 
     // 解析所有产品的轮胎规格
     const tireProducts = priceListData.map(product => {
@@ -421,21 +538,21 @@ app.post('/api/price-list/tire-search', (req, res) => {
       const specs = product.tire_specs;
       
       // 基础匹配：宽度必须匹配
-      if (specs.width !== width) return false;
+      if (specs.width != width) return false;
       
       if (searchType === 'car') {
         // 小型轿车：需要匹配宽度、扁平比、直径
         if (exact_match) {
-          return specs.aspect_ratio === aspect_ratio && specs.rim_diameter === rim_diameter;
+          return specs.aspect_ratio == finalAspectRatio && specs.rim_diameter == finalRimDiameter;
         } else {
           // 允许一定的规格范围匹配
-          const aspectMatch = !aspect_ratio || Math.abs(specs.aspect_ratio - aspect_ratio) <= 5;
-          const rimMatch = !rim_diameter || specs.rim_diameter === rim_diameter;
+          const aspectMatch = !finalAspectRatio || Math.abs(specs.aspect_ratio - finalAspectRatio) <= 5;
+          const rimMatch = !finalRimDiameter || specs.rim_diameter == finalRimDiameter;
           return aspectMatch && rimMatch;
         }
       } else {
         // 货车：只需要匹配宽度和直径
-        return !rim_diameter || specs.rim_diameter === rim_diameter;
+        return !finalRimDiameter || specs.rim_diameter == finalRimDiameter;
       }
     });
 
@@ -446,30 +563,79 @@ app.post('/api/price-list/tire-search', (req, res) => {
       return priceA - priceB;
     });
 
-    // 返回结果
-    res.json({
-      success: true,
-      message: `找到 ${matchingTires.length} 个匹配的${searchType === 'car' ? '小型轿车' : '货车'}轮胎`,
-      search_params: {
-        width: width,
-        aspect_ratio: aspect_ratio || null,
-        rim_diameter: rim_diameter || null,
-        type: searchType,
-        exact_match: exact_match
-      },
-      results: matchingTires.map(tire => ({
-        'ID Producto': tire['ID Producto'],
-        'Producto': tire['Producto'],
-        'Exit.': tire['Exit.'],
-        'PRECIO FINAL': tire['PRECIO FINAL'],
-        'tire_specs': tire.tire_specs
+    // 格式化结果为统一的Agent响应格式
+    const tireType = searchType === 'car' ? '小型轿车' : '货车';
+    const searchSpec = searchType === 'car' 
+      ? `${width}/${finalAspectRatio}R${finalRimDiameter}`
+      : `${width}R${finalRimDiameter}`;
+    
+    // 原始数据
+    const rawData = {
+      searchType: searchType,
+      searchSpec: searchSpec,
+      totalFound: matchingTires.length,
+      results: matchingTires.slice(0, 10).map(tire => ({
+        id: tire['ID Producto'],
+        product: tire['Producto'],
+        stock: tire['Exit.'],
+        price: tire['PRECIO FINAL'],
+        specs: tire.tire_specs
       })),
-      total: matchingTires.length,
+      searchParams: {
+        width: width,
+        aspectRatio: finalAspectRatio || null,
+        diameter: finalRimDiameter || null,
+        type: searchType,
+        exactMatch: exact_match
+      },
       statistics: {
-        total_tire_products: tireProducts.length,
-        car_tires: tireProducts.filter(p => p.tire_specs.type === 'car').length,
-        truck_tires: tireProducts.filter(p => p.tire_specs.type === 'truck').length
+        totalTireProducts: tireProducts.length,
+        carTires: tireProducts.filter(p => p.tire_specs.type === 'car').length,
+        truckTires: tireProducts.filter(p => p.tire_specs.type === 'truck').length
       }
+    };
+
+    // Markdown表格格式
+    let markdownTable = "| 产品ID | 产品名称 | 库存 | 价格 |\n|:-------|:---------|:-----|:-----|\n";
+    if (matchingTires.length > 0) {
+      matchingTires.slice(0, 5).forEach(tire => {
+        markdownTable += `| ${tire['ID Producto']} | ${tire['Producto']} | ${tire['Exit.']} | $${tire['PRECIO FINAL']} |\n`;
+      });
+    } else {
+      markdownTable += "| - | 未找到匹配轮胎 | - | - |\n";
+    }
+
+    // 描述信息
+    let description = `🔍 轮胎搜索结果 - ${tireType}轮胎 (${searchSpec})\n\n`;
+    description += `📊 搜索统计:\n`;
+    description += `• 匹配轮胎: ${matchingTires.length} 个\n`;
+    description += `• 轮胎类型: ${tireType}\n`;
+    description += `• 搜索规格: ${searchSpec}\n\n`;
+    
+    if (matchingTires.length > 0) {
+      description += `💰 价格范围: $${matchingTires[0]['PRECIO FINAL']} - $${matchingTires[matchingTires.length-1]['PRECIO FINAL']}\n\n`;
+      description += `🏆 推荐轮胎:\n`;
+      matchingTires.slice(0, 3).forEach((tire, index) => {
+        description += `${index + 1}. ${tire['Producto']} - $${tire['PRECIO FINAL']}\n`;
+      });
+      
+      if (matchingTires.length > 3) {
+        description += `\n... 还有 ${matchingTires.length - 3} 个其他选项`;
+      }
+    } else {
+      description += `❌ 未找到匹配的${tireType}轮胎\n`;
+      description += `💡 建议:\n`;
+      description += `• 检查轮胎规格是否正确\n`;
+      description += `• 尝试其他尺寸规格\n`;
+      description += `• 联系客服获取更多选项`;
+    }
+
+    // 返回统一格式
+    res.json({
+      raw: rawData,
+      markdown: markdownTable,
+      type: "markdown",
+      desc: description
     });
 
   } catch (error) {
