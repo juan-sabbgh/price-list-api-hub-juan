@@ -356,14 +356,10 @@ app.post('/api/price-list/search', (req, res) => {
     if (results.length > 0) {
       const prices = results.map(item => parseFloat(item['PRECIO FINAL']) || 0).sort((a, b) => a - b);
       description += `💰 Price range: $${prices[0]} - $${prices[prices.length-1]}\n\n`;
-      description += `🏆 Recommended products:\n`;
-      results.slice(0, 3).forEach((item, index) => {
+      description += `🏆 All matching products:\n`;
+      results.forEach((item, index) => {
         description += `${index + 1}. ${item['Producto']} - $${item['PRECIO FINAL']}\n`;
       });
-      
-      if (results.length > 3) {
-        description += `\n... and ${results.length - 3} other products`;
-      }
     } else {
       description += `❌ No matching products found\n`;
       description += `💡 Suggestions:\n`;
@@ -666,14 +662,10 @@ app.post('/api/price-list/tire-search', (req, res) => {
     
     if (matchingTires.length > 0) {
       description += `💰 Price range: $${matchingTires[0]['PRECIO FINAL']} - $${matchingTires[matchingTires.length-1]['PRECIO FINAL']}\n\n`;
-      description += `🏆 Recommended tires:\n`;
-      matchingTires.slice(0, 3).forEach((tire, index) => {
+      description += `🏆 All matching tires:\n`;
+      matchingTires.forEach((tire, index) => {
         description += `${index + 1}. ${tire['Producto']} - $${tire['PRECIO FINAL']}\n`;
       });
-      
-      if (matchingTires.length > 3) {
-        description += `\n... and ${matchingTires.length - 3} other options`;
-      }
     } else {
       description += `❌ No matching ${tireType.toLowerCase()} tires found\n`;
       description += `💡 Suggestions:\n`;
@@ -872,14 +864,10 @@ app.post('/api/price-list/tire-search-es', (req, res) => {
     
     if (matchingTires.length > 0) {
       description += `💰 Rango de precios: $${matchingTires[0]['PRECIO FINAL']} - $${matchingTires[matchingTires.length-1]['PRECIO FINAL']}\n\n`;
-      description += `🏆 Neumáticos recomendados:\n`;
-      matchingTires.slice(0, 3).forEach((tire, index) => {
+      description += `🏆 Todos los neumáticos encontrados:\n`;
+      matchingTires.forEach((tire, index) => {
         description += `${index + 1}. ${tire['Producto']} - $${tire['PRECIO FINAL']}\n`;
       });
-      
-      if (matchingTires.length > 3) {
-        description += `\n... y ${matchingTires.length - 3} opciones más`;
-      }
     } else {
       description += `❌ No se encontraron neumáticos de ${tireType.toLowerCase()} que coincidan\n`;
       description += `💡 Sugerencias:\n`;
