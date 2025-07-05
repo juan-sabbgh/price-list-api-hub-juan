@@ -570,10 +570,13 @@ app.post('/api/price-list/tire-search', (req, res) => {
       
       if (searchType === 'car') {
         // Car tire: need to match width, aspect ratio, diameter
-        if (exact_match) {
+        // Auto-enable exact match when user provides complete specifications
+        const shouldUseExactMatch = exact_match || (finalAspectRatio && finalRimDiameter);
+        
+        if (shouldUseExactMatch) {
           return specs.aspect_ratio == finalAspectRatio && specs.rim_diameter == finalRimDiameter;
         } else {
-          // Allow certain specification range matching
+          // Allow certain specification range matching (only when partial specs provided)
           const aspectMatch = !finalAspectRatio || Math.abs(specs.aspect_ratio - finalAspectRatio) <= 5;
           
           // Diameter match: intelligent matching, ignore R character
@@ -772,10 +775,13 @@ app.post('/api/price-list/tire-search-es', (req, res) => {
       
       if (searchType === 'car') {
         // Car tire: need to match width, aspect ratio, diameter
-        if (exact_match) {
+        // Auto-enable exact match when user provides complete specifications
+        const shouldUseExactMatch = exact_match || (finalAspectRatio && finalRimDiameter);
+        
+        if (shouldUseExactMatch) {
           return specs.aspect_ratio == finalAspectRatio && specs.rim_diameter == finalRimDiameter;
         } else {
-          // Allow certain specification range matching
+          // Allow certain specification range matching (only when partial specs provided)
           const aspectMatch = !finalAspectRatio || Math.abs(specs.aspect_ratio - finalAspectRatio) <= 5;
           
           // Diameter match: intelligent matching, ignore R character
