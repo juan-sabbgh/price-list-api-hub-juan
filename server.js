@@ -63,6 +63,23 @@ function loadExcelData() {
 // Load data on startup
 loadExcelData();
 
+// Price formatting function - convert to integer
+function formatPrice(price) {
+  const numPrice = parseFloat(price);
+  if (isNaN(numPrice)) return 0;
+  return Math.round(numPrice); // Round to nearest integer
+}
+
+// Format product prices to integer
+function formatProductPrices(product) {
+  return {
+    ...product,
+    'Costo Uni Unitario': formatPrice(product['Costo Uni Unitario']),
+    'COSTO CON IVA': formatPrice(product['COSTO CON IVA']),
+    'PRECIO FINAL': formatPrice(product['PRECIO FINAL'])
+  };
+}
+
 // Tire specification parsing function
 function parseTireSpecification(productName) {
   const name = String(productName || '').trim();
@@ -197,12 +214,15 @@ app.get('/api/price-list/health', (req, res) => {
 
 // Get all products
 app.get('/api/price-list/products', (req, res) => {
+  // Format all product prices to integers
+  const formattedData = priceListData.map(product => formatProductPrices(product));
+  
   res.json({
     success: true,
     message: 'Successfully retrieved all products',
     module: 'price-list',
-    data: priceListData,
-    total: priceListData.length
+    data: formattedData,
+    total: formattedData.length
   });
 });
 
@@ -280,7 +300,7 @@ app.post('/api/price-list/search', (req, res) => {
     // Price range filtering
     if (priceMin !== undefined || priceMax !== undefined) {
       results = results.filter(item => {
-        const finalPrice = parseFloat(item['PRECIO FINAL']) || 0;
+        const finalPrice = formatPrice(item['PRECIO FINAL']);
         let passesMin = true;
         let passesMax = true;
         
@@ -303,8 +323,8 @@ app.post('/api/price-list/search', (req, res) => {
 
     // Sort: by price (optional)
     results.sort((a, b) => {
-      const priceA = parseFloat(a['PRECIO FINAL']) || 0;
-      const priceB = parseFloat(b['PRECIO FINAL']) || 0;
+      const priceA = formatPrice(a['PRECIO FINAL']);
+      const priceB = formatPrice(b['PRECIO FINAL']);
       return priceA - priceB;
     });
 
@@ -315,14 +335,17 @@ app.post('/api/price-list/search', (req, res) => {
     const rawData = {
       totalFound: results.length,
       searchQuery: searchQuery,
-      results: results.slice(0, 10).map(item => ({
-        id: item['ID Producto'],
-        product: item['Producto'],
-        unitCost: item['Costo Uni Unitario'],
-        stock: item['Exit.'],
-        costWithTax: item['COSTO CON IVA'],
-        finalPrice: item['PRECIO FINAL']
-      })),
+      results: results.slice(0, 10).map(item => {
+        const formattedItem = formatProductPrices(item);
+        return {
+          id: formattedItem['ID Producto'],
+          product: formattedItem['Producto'],
+          unitCost: formattedItem['Costo Uni Unitario'],
+          stock: formattedItem['Exit.'],
+          costWithTax: formattedItem['COSTO CON IVA'],
+          finalPrice: formattedItem['PRECIO FINAL']
+        };
+      }),
       searchParams: {
         query: query || null,
         productId: productId || null,
@@ -341,7 +364,8 @@ app.post('/api/price-list/search', (req, res) => {
     if (results.length > 0) {
       // Keep consistent with raw.results, display up to 10 results
       results.slice(0, 10).forEach(item => {
-        markdownTable += `| ${item['ID Producto']} | ${item['Producto']} | ${item['Exit.']} | $${item['PRECIO FINAL']} |\n`;
+        const formattedItem = formatProductPrices(item);
+        markdownTable += `| ${formattedItem['ID Producto']} | ${formattedItem['Producto']} | ${formattedItem['Exit.']} | $${formattedItem['PRECIO FINAL']} |\n`;
       });
     } else {
       markdownTable += "| - | No matching products found | - | - |\n";
@@ -354,11 +378,12 @@ app.post('/api/price-list/search', (req, res) => {
     description += `• Search query: ${searchQuery}\n\n`;
     
     if (results.length > 0) {
-      const prices = results.map(item => parseFloat(item['PRECIO FINAL']) || 0).sort((a, b) => a - b);
+      const prices = results.map(item => formatPrice(item['PRECIO FINAL'])).sort((a, b) => a - b);
       description += `💰 Price range: $${prices[0]} - $${prices[prices.length-1]}\n\n`;
       description += `🏆 All matching products:\n`;
       results.forEach((item, index) => {
-        description += `${index + 1}. ${item['Producto']} - $${item['PRECIO FINAL']}\n`;
+        const formattedItem = formatProductPrices(item);
+        description += `${index + 1}. ${formattedItem['Producto']} - $${formattedItem['PRECIO FINAL']}\n`;
       });
     } else {
       description += `❌ No matching products found\n`;
@@ -404,36 +429,37 @@ app.get('/api/price-list/product/:id', (req, res) => {
 
     if (product) {
       // 格式化为统一的Agent响应格式
+      const formattedProduct = formatProductPrices(product);
       const rawData = {
-        id: product['ID Producto'],
-        product: product['Producto'],
-        unitCost: product['Costo Uni Unitario'],
-        stock: product['Exit.'],
-        costWithTax: product['COSTO CON IVA'],
-        finalPrice: product['PRECIO FINAL'],
+        id: formattedProduct['ID Producto'],
+        product: formattedProduct['Producto'],
+        unitCost: formattedProduct['Costo Uni Unitario'],
+        stock: formattedProduct['Exit.'],
+        costWithTax: formattedProduct['COSTO CON IVA'],
+        finalPrice: formattedProduct['PRECIO FINAL'],
         searchedId: id
       };
 
       // Markdown table format
       const markdownTable = "| Field | Value |\n|:------|:------|\n" +
-        `| Product ID | ${product['ID Producto']} |\n` +
-        `| Product Name | ${product['Producto']} |\n` +
-        `| Unit Cost | $${product['Costo Uni Unitario']} |\n` +
-        `| Stock | ${product['Exit.']} |\n` +
-        `| Cost with Tax | $${product['COSTO CON IVA']} |\n` +
-        `| Final Price | $${product['PRECIO FINAL']} |`;
+        `| Product ID | ${formattedProduct['ID Producto']} |\n` +
+        `| Product Name | ${formattedProduct['Producto']} |\n` +
+        `| Unit Cost | $${formattedProduct['Costo Uni Unitario']} |\n` +
+        `| Stock | ${formattedProduct['Exit.']} |\n` +
+        `| Cost with Tax | $${formattedProduct['COSTO CON IVA']} |\n` +
+        `| Final Price | $${formattedProduct['PRECIO FINAL']} |`;
 
       // Description information
       const description = `🔍 Product Details Query Result\n\n` +
         `📦 Product Information:\n` +
-        `• Product ID: ${product['ID Producto']}\n` +
-        `• Product Name: ${product['Producto']}\n` +
-        `• Stock Status: ${product['Exit.']}\n` +
-        `• Final Price: $${product['PRECIO FINAL']}\n\n` +
+        `• Product ID: ${formattedProduct['ID Producto']}\n` +
+        `• Product Name: ${formattedProduct['Producto']}\n` +
+        `• Stock Status: ${formattedProduct['Exit.']}\n` +
+        `• Final Price: $${formattedProduct['PRECIO FINAL']}\n\n` +
         `💰 Price Details:\n` +
-        `• Unit Cost: $${product['Costo Uni Unitario']}\n` +
-        `• Cost with Tax: $${product['COSTO CON IVA']}\n` +
-        `• Final Price: $${product['PRECIO FINAL']}\n\n` +
+        `• Unit Cost: $${formattedProduct['Costo Uni Unitario']}\n` +
+        `• Cost with Tax: $${formattedProduct['COSTO CON IVA']}\n` +
+        `• Final Price: $${formattedProduct['PRECIO FINAL']}\n\n` +
         `✅ Product available for ordering or inquiry.`;
 
       res.json({
@@ -603,8 +629,8 @@ app.post('/api/price-list/tire-search', (req, res) => {
 
     // Sort by price
     matchingTires.sort((a, b) => {
-      const priceA = parseFloat(a['PRECIO FINAL']) || 0;
-      const priceB = parseFloat(b['PRECIO FINAL']) || 0;
+      const priceA = formatPrice(a['PRECIO FINAL']);
+      const priceB = formatPrice(b['PRECIO FINAL']);
       return priceA - priceB;
     });
 
@@ -622,13 +648,16 @@ app.post('/api/price-list/tire-search', (req, res) => {
       searchType: searchType,
       searchSpec: searchSpec,
       totalFound: matchingTires.length,
-      results: matchingTires.slice(0, resultLimit).map(tire => ({
-        id: tire['ID Producto'],
-        product: tire['Producto'],
-        stock: tire['Exit.'],
-        price: tire['PRECIO FINAL'],
-        specs: tire.tire_specs
-      })),
+      results: matchingTires.slice(0, resultLimit).map(tire => {
+        const formattedTire = formatProductPrices(tire);
+        return {
+          id: formattedTire['ID Producto'],
+          product: formattedTire['Producto'],
+          stock: formattedTire['Exit.'],
+          price: formattedTire['PRECIO FINAL'],
+          specs: tire.tire_specs
+        };
+      }),
       searchParams: {
         width: width,
         aspectRatio: finalAspectRatio || null,
@@ -649,7 +678,8 @@ app.post('/api/price-list/tire-search', (req, res) => {
     if (matchingTires.length > 0) {
       // Use user-specified result count limit
       matchingTires.slice(0, resultLimit).forEach(tire => {
-        markdownTable += `| ${tire['ID Producto']} | ${tire['Producto']} | ${tire['Exit.']} | $${tire['PRECIO FINAL']} |\n`;
+        const formattedTire = formatProductPrices(tire);
+        markdownTable += `| ${formattedTire['ID Producto']} | ${formattedTire['Producto']} | ${formattedTire['Exit.']} | $${formattedTire['PRECIO FINAL']} |\n`;
       });
     } else {
       markdownTable += "| - | No matching tires found | - | - |\n";
@@ -664,10 +694,13 @@ app.post('/api/price-list/tire-search', (req, res) => {
     description += `• Search specification: ${searchSpec}\n\n`;
     
     if (matchingTires.length > 0) {
-      description += `💰 Price range: $${matchingTires[0]['PRECIO FINAL']} - $${matchingTires[matchingTires.length-1]['PRECIO FINAL']}\n\n`;
+      const formattedFirstTire = formatProductPrices(matchingTires[0]);
+      const formattedLastTire = formatProductPrices(matchingTires[matchingTires.length-1]);
+      description += `💰 Price range: $${formattedFirstTire['PRECIO FINAL']} - $${formattedLastTire['PRECIO FINAL']}\n\n`;
       description += `🏆 All matching tires:\n`;
       matchingTires.forEach((tire, index) => {
-        description += `${index + 1}. ${tire['Producto']} - $${tire['PRECIO FINAL']}\n`;
+        const formattedTire = formatProductPrices(tire);
+        description += `${index + 1}. ${formattedTire['Producto']} - $${formattedTire['PRECIO FINAL']}\n`;
       });
     } else {
       description += `❌ No matching ${tireType.toLowerCase()} tires found\n`;
@@ -808,8 +841,8 @@ app.post('/api/price-list/tire-search-es', (req, res) => {
 
     // Sort by price
     matchingTires.sort((a, b) => {
-      const priceA = parseFloat(a['PRECIO FINAL']) || 0;
-      const priceB = parseFloat(b['PRECIO FINAL']) || 0;
+      const priceA = formatPrice(a['PRECIO FINAL']);
+      const priceB = formatPrice(b['PRECIO FINAL']);
       return priceA - priceB;
     });
 
@@ -827,13 +860,16 @@ app.post('/api/price-list/tire-search-es', (req, res) => {
       searchType: searchType,
       searchSpec: searchSpec,
       totalFound: matchingTires.length,
-      results: matchingTires.slice(0, resultLimit).map(tire => ({
-        id: tire['ID Producto'],
-        product: tire['Producto'],
-        stock: tire['Exit.'],
-        price: tire['PRECIO FINAL'],
-        specs: tire.tire_specs
-      })),
+      results: matchingTires.slice(0, resultLimit).map(tire => {
+        const formattedTire = formatProductPrices(tire);
+        return {
+          id: formattedTire['ID Producto'],
+          product: formattedTire['Producto'],
+          stock: formattedTire['Exit.'],
+          price: formattedTire['PRECIO FINAL'],
+          specs: tire.tire_specs
+        };
+      }),
       searchParams: {
         width: width,
         aspectRatio: finalAspectRatio || null,
@@ -854,7 +890,8 @@ app.post('/api/price-list/tire-search-es', (req, res) => {
     if (matchingTires.length > 0) {
       // Use user-specified result count limit
       matchingTires.slice(0, resultLimit).forEach(tire => {
-        markdownTable += `| ${tire['ID Producto']} | ${tire['Producto']} | ${tire['Exit.']} | $${tire['PRECIO FINAL']} |\n`;
+        const formattedTire = formatProductPrices(tire);
+        markdownTable += `| ${formattedTire['ID Producto']} | ${formattedTire['Producto']} | ${formattedTire['Exit.']} | $${formattedTire['PRECIO FINAL']} |\n`;
       });
     } else {
       markdownTable += "| - | No se encontraron neumáticos | - | - |\n";
@@ -869,10 +906,13 @@ app.post('/api/price-list/tire-search-es', (req, res) => {
     description += `• Especificación de búsqueda: ${searchSpec}\n\n`;
     
     if (matchingTires.length > 0) {
-      description += `💰 Rango de precios: $${matchingTires[0]['PRECIO FINAL']} - $${matchingTires[matchingTires.length-1]['PRECIO FINAL']}\n\n`;
+      const formattedFirstTire = formatProductPrices(matchingTires[0]);
+      const formattedLastTire = formatProductPrices(matchingTires[matchingTires.length-1]);
+      description += `💰 Rango de precios: $${formattedFirstTire['PRECIO FINAL']} - $${formattedLastTire['PRECIO FINAL']}\n\n`;
       description += `🏆 Todos los neumáticos encontrados:\n`;
       matchingTires.forEach((tire, index) => {
-        description += `${index + 1}. ${tire['Producto']} - $${tire['PRECIO FINAL']}\n`;
+        const formattedTire = formatProductPrices(tire);
+        description += `${index + 1}. ${formattedTire['Producto']} - $${formattedTire['PRECIO FINAL']}\n`;
       });
     } else {
       description += `❌ No se encontraron neumáticos de ${tireType.toLowerCase()} que coincidan\n`;
