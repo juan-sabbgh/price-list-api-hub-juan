@@ -600,7 +600,15 @@ app.post('/api/price-list/tire-search', (req, res) => {
         const shouldUseExactMatch = exact_match || (finalAspectRatio && finalRimDiameter);
         
         if (shouldUseExactMatch) {
-          return specs.aspect_ratio == finalAspectRatio && specs.rim_diameter == finalRimDiameter;
+          // Exact match with intelligent diameter matching (ignore R character)
+          const aspectMatch = specs.aspect_ratio == finalAspectRatio;
+          let rimMatch = false;
+          if (finalRimDiameter) {
+            const userDiameter = parseInt(String(finalRimDiameter).replace(/[rR]/g, ''));
+            const productDiameter = parseInt(String(specs.rim_diameter).replace(/[rR]/g, ''));
+            rimMatch = userDiameter === productDiameter;
+          }
+          return aspectMatch && rimMatch;
         } else {
           // Allow certain specification range matching (only when partial specs provided)
           const aspectMatch = !finalAspectRatio || Math.abs(specs.aspect_ratio - finalAspectRatio) <= 5;
@@ -812,7 +820,15 @@ app.post('/api/price-list/tire-search-es', (req, res) => {
         const shouldUseExactMatch = exact_match || (finalAspectRatio && finalRimDiameter);
         
         if (shouldUseExactMatch) {
-          return specs.aspect_ratio == finalAspectRatio && specs.rim_diameter == finalRimDiameter;
+          // Exact match with intelligent diameter matching (ignore R character)
+          const aspectMatch = specs.aspect_ratio == finalAspectRatio;
+          let rimMatch = false;
+          if (finalRimDiameter) {
+            const userDiameter = parseInt(String(finalRimDiameter).replace(/[rR]/g, ''));
+            const productDiameter = parseInt(String(specs.rim_diameter).replace(/[rR]/g, ''));
+            rimMatch = userDiameter === productDiameter;
+          }
+          return aspectMatch && rimMatch;
         } else {
           // Allow certain specification range matching (only when partial specs provided)
           const aspectMatch = !finalAspectRatio || Math.abs(specs.aspect_ratio - finalAspectRatio) <= 5;
