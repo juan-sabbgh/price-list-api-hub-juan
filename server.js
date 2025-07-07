@@ -132,14 +132,38 @@ function parseTireSpecification(productName) {
   }
 
   // Other possible tire formats
-  // Format: 155/70R13 or 155/70-13
-  const standardPattern = /(\d{3})\/(\d{2})[-R](\d{2})/;
-  const standardMatch = name.match(standardPattern);
+  // Format: 155/70R13, 155/70-13, 185/60 R15
+  const standardPattern1 = /(\d{3})\/(\d{2})[-R](\d{2})/; // 155/70R13 or 155/70-13
+  const standardMatch1 = name.match(standardPattern1);
   
-  if (standardMatch) {
-    specs.width = parseInt(standardMatch[1]);
-    specs.aspect_ratio = parseInt(standardMatch[2]);
-    specs.rim_diameter = parseInt(standardMatch[3]);
+  if (standardMatch1) {
+    specs.width = parseInt(standardMatch1[1]);
+    specs.aspect_ratio = parseInt(standardMatch1[2]);
+    specs.rim_diameter = parseInt(standardMatch1[3]);
+    specs.type = 'car';
+    return specs;
+  }
+
+  // New: Format with space before R: 185/60 R15
+  const standardPattern2 = /(\d{3})\/(\d{2})\s+R(\d{2})/; // 185/60 R15
+  const standardMatch2 = name.match(standardPattern2);
+  
+  if (standardMatch2) {
+    specs.width = parseInt(standardMatch2[1]);
+    specs.aspect_ratio = parseInt(standardMatch2[2]);
+    specs.rim_diameter = parseInt(standardMatch2[3]);
+    specs.type = 'car';
+    return specs;
+  }
+
+  // Additional: More flexible format matching
+  const flexiblePattern = /(\d{3})\/(\d{2})\s*R?\s*(\d{2})/; // Very flexible matching
+  const flexibleMatch = name.match(flexiblePattern);
+  
+  if (flexibleMatch) {
+    specs.width = parseInt(flexibleMatch[1]);
+    specs.aspect_ratio = parseInt(flexibleMatch[2]);
+    specs.rim_diameter = parseInt(flexibleMatch[3]);
     specs.type = 'car';
     return specs;
   }
