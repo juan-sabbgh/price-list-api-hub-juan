@@ -955,6 +955,7 @@ app.post('/api/price-list/tire-search-es', (req, res) => {
         const formattedTire = formatProductPrices(tire);
         description += `${index + 1}. ${formattedTire['Producto']} - $${formattedTire['PRECIO FINAL']} (Disponible: ${formattedTire['Exit.']})\n`;
       });
+      description += `\n💎 Información importante: Nuestro precio incluye instalación, válvula nueva y servicio de balanceo.\n`;
       description += `\n🤝 En Grupo Magno nos preocupamos por su seguridad y satisfacción. ¿Puedo ayudarle con algo más?`;
     } else {
       description += `❌ Lo siento, no se encontraron neumáticos de ${tireType.toLowerCase()} que coincidan con su búsqueda\n\n`;
