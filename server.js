@@ -937,29 +937,32 @@ app.post('/api/price-list/tire-search-es', (req, res) => {
       markdownTable += "| - | No se encontraron neumáticos | - | - |\n";
     }
 
-    // Description information (Spanish)
-    let description = `🔍 Resultados de Búsqueda de Neumáticos - Neumático de ${tireType} (${searchSpec})\n\n`;
-    description += `📊 Estadísticas de Búsqueda:\n`;
-    description += `• Neumáticos encontrados: ${matchingTires.length}\n`;
-    description += `• Cantidad mostrada: ${Math.min(matchingTires.length, resultLimit)}\n`;
-    description += `• Tipo de neumático: ${tireType}\n`;
-    description += `• Especificación de búsqueda: ${searchSpec}\n\n`;
+    // Description information (Spanish) - Version C: Warm Service Style
+    let description = `🌟 ¡Hola! Me complace atenderle. Soy su asistente de ventas de **Llantasyservicios.mx** (también conocido como **Grupo Magno**), su aliado en neumáticos y servicios automotrices en Ciudad de México.\n\n`;
+    description += `🔍 Búsqueda completada para neumáticos de ${tireType} - Medida: ${searchSpec}\n\n`;
+    description += `📋 Información de su búsqueda:\n`;
+    description += `• ✅ Neumáticos encontrados: ${matchingTires.length}\n`;
+    description += `• 👁️ Resultados mostrados: ${Math.min(matchingTires.length, resultLimit)}\n`;
+    description += `• 🚗 Tipo: ${tireType}\n`;
+    description += `• 📏 Especificación: ${searchSpec}\n\n`;
     
     if (matchingTires.length > 0) {
       const formattedFirstTire = formatProductPrices(matchingTires[0]);
       const formattedLastTire = formatProductPrices(matchingTires[matchingTires.length-1]);
       description += `💰 Rango de precios: $${formattedFirstTire['PRECIO FINAL']} - $${formattedLastTire['PRECIO FINAL']}\n\n`;
-      description += `🏆 Todos los neumáticos encontrados:\n`;
+      description += `🎯 Sus opciones de neumáticos:\n`;
       matchingTires.forEach((tire, index) => {
         const formattedTire = formatProductPrices(tire);
-        description += `${index + 1}. ${formattedTire['Producto']} - $${formattedTire['PRECIO FINAL']}\n`;
+        description += `${index + 1}. ${formattedTire['Producto']} - $${formattedTire['PRECIO FINAL']} (Disponible: ${formattedTire['Exit.']})\n`;
       });
+      description += `\n🤝 En Grupo Magno nos preocupamos por su seguridad y satisfacción. ¿Puedo ayudarle con algo más?`;
     } else {
-      description += `❌ No se encontraron neumáticos de ${tireType.toLowerCase()} que coincidan\n`;
-      description += `💡 Sugerencias:\n`;
-      description += `• Verifique si las especificaciones del neumático son correctas\n`;
-      description += `• Pruebe con otras especificaciones de tamaño\n`;
-      description += `• Contacte al servicio al cliente para más opciones`;
+      description += `❌ Lo siento, no se encontraron neumáticos de ${tireType.toLowerCase()} que coincidan con su búsqueda\n\n`;
+      description += `💡 Permítame sugerirle algunas opciones:\n`;
+      description += `• 🔍 Verifiquemos juntos si las especificaciones del neumático son correctas\n`;
+      description += `• 🛞 Puedo ayudarle a buscar con otras especificaciones de tamaño\n`;
+      description += `• 📞 También puede contactar directamente a nuestro equipo de servicio al cliente\n\n`;
+      description += `🌟 En Llantasyservicios.mx estamos comprometidos con encontrar la mejor solución para usted. ¡No se preocupe, seguro encontramos lo que necesita!`;
     }
 
     // Return unified format
