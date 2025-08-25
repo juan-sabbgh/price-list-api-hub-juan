@@ -33,11 +33,11 @@ function loadExcelData() {
     // Use absolute path to ensure file can be found in Vercel environment
     const excelPath = path.join(__dirname, 'LISTA DE PRECIOS 25062025.xlsx');
     console.log('Attempting to load Excel file:', excelPath);
-    
+
     const workbook = XLSX.readFile(excelPath);
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-    
+
     // Convert to JSON format
     priceListData = XLSX.utils.sheet_to_json(worksheet);
     console.log(`Successfully loaded ${priceListData.length} records`);
@@ -47,7 +47,7 @@ function loadExcelData() {
     console.error('Failed to load Excel file:', error.message);
     console.error('Current working directory:', process.cwd());
     console.error('__dirname:', __dirname);
-    
+
     // Try to list files in current directory
     try {
       const files = fs.readdirSync(process.cwd());
@@ -55,7 +55,7 @@ function loadExcelData() {
     } catch (fsError) {
       console.error('Cannot read directory:', fsError.message);
     }
-    
+
     return false;
   }
 }
@@ -83,7 +83,7 @@ function formatProductPrices(product) {
 // Tire specification parsing function
 function parseTireSpecification(productName) {
   const name = String(productName || '').trim();
-  
+
   // Tire specification parsing result
   const specs = {
     width: null,
@@ -97,7 +97,7 @@ function parseTireSpecification(productName) {
   // Format: width aspect_ratio diameter [other info]
   const carTirePattern = /^(\d{3})\s+(\d{2})\s+(\d{2})\s/;
   const carMatch = name.match(carTirePattern);
-  
+
   if (carMatch) {
     specs.width = parseInt(carMatch[1]);
     specs.aspect_ratio = parseInt(carMatch[2]);
@@ -110,7 +110,7 @@ function parseTireSpecification(productName) {
   // Format: width aspect_ratio R-diameter [other info]
   const carTireWithRPattern = /^(\d{3})\s+(\d{2})\s+R(\d{2})\s/;
   const carWithRMatch = name.match(carTireWithRPattern);
-  
+
   if (carWithRMatch) {
     specs.width = parseInt(carWithRMatch[1]);
     specs.aspect_ratio = parseInt(carWithRMatch[2]);
@@ -123,7 +123,7 @@ function parseTireSpecification(productName) {
   // Format: width R-diameter [other info]
   const truckTirePattern = /^(\d{3,4})\s+R(\d{2})\s/;
   const truckMatch = name.match(truckTirePattern);
-  
+
   if (truckMatch) {
     specs.width = parseInt(truckMatch[1]);
     specs.rim_diameter = parseInt(truckMatch[2]);
@@ -135,7 +135,7 @@ function parseTireSpecification(productName) {
   // Format: 155/70R13, 155/70-13, 185/60 R15
   const standardPattern1 = /(\d{3})\/(\d{2})[-R](\d{2})/; // 155/70R13 or 155/70-13
   const standardMatch1 = name.match(standardPattern1);
-  
+
   if (standardMatch1) {
     specs.width = parseInt(standardMatch1[1]);
     specs.aspect_ratio = parseInt(standardMatch1[2]);
@@ -147,7 +147,7 @@ function parseTireSpecification(productName) {
   // New: Format with space before R: 185/60 R15
   const standardPattern2 = /(\d{3})\/(\d{2})\s+R(\d{2})/; // 185/60 R15
   const standardMatch2 = name.match(standardPattern2);
-  
+
   if (standardMatch2) {
     specs.width = parseInt(standardMatch2[1]);
     specs.aspect_ratio = parseInt(standardMatch2[2]);
@@ -159,7 +159,7 @@ function parseTireSpecification(productName) {
   // Additional: More flexible format matching
   const flexiblePattern = /(\d{3})\/(\d{2})\s*R?\s*(\d{2})/; // Very flexible matching
   const flexibleMatch = name.match(flexiblePattern);
-  
+
   if (flexibleMatch) {
     specs.width = parseInt(flexibleMatch[1]);
     specs.aspect_ratio = parseInt(flexibleMatch[2]);
@@ -240,7 +240,7 @@ app.get('/api/price-list/health', (req, res) => {
 app.get('/api/price-list/products', (req, res) => {
   // Format all product prices to integers
   const formattedData = priceListData.map(product => formatProductPrices(product));
-  
+
   res.json({
     success: true,
     message: 'Successfully retrieved all products',
@@ -253,7 +253,7 @@ app.get('/api/price-list/products', (req, res) => {
 // Product search API - supports multi-parameter search
 app.post('/api/price-list/search', (req, res) => {
   try {
-    const { 
+    const {
       query,           // General search (product ID or name)
       productId,       // Exact product ID search
       productName,     // Product name search
@@ -261,7 +261,7 @@ app.post('/api/price-list/search', (req, res) => {
       priceMax,        // Maximum price
       limit = 50       // Limit result count, default 50
     } = req.body;
-    
+
     // At least one search condition is required
     if (!query && !productId && !productName && !priceMin && !priceMax) {
       return res.status(400).json({
@@ -277,7 +277,7 @@ app.post('/api/price-list/search', (req, res) => {
         },
         examples: {
           basic: { query: "1100" },
-          advanced: { 
+          advanced: {
             productName: "tire",
             priceMin: 100,
             priceMax: 500,
@@ -327,14 +327,14 @@ app.post('/api/price-list/search', (req, res) => {
         const finalPrice = formatPrice(item['PRECIO FINAL']);
         let passesMin = true;
         let passesMax = true;
-        
+
         if (priceMin !== undefined) {
           passesMin = finalPrice >= parseFloat(priceMin);
         }
         if (priceMax !== undefined) {
           passesMax = finalPrice <= parseFloat(priceMax);
         }
-        
+
         return passesMin && passesMax;
       });
     }
@@ -354,7 +354,7 @@ app.post('/api/price-list/search', (req, res) => {
 
     // Format as unified Agent response format
     const searchQuery = query || productId || productName || `price ${priceMin || 0}-${priceMax || '∞'}`;
-    
+
     // Raw data
     const rawData = {
       totalFound: results.length,
@@ -400,10 +400,10 @@ app.post('/api/price-list/search', (req, res) => {
     description += `📊 Search Statistics:\n`;
     description += `• Products found: ${results.length}\n`;
     description += `• Search query: ${searchQuery}\n\n`;
-    
+
     if (results.length > 0) {
       const prices = results.map(item => formatPrice(item['PRECIO FINAL'])).sort((a, b) => a - b);
-      description += `💰 Price range: $${prices[0]} - $${prices[prices.length-1]}\n\n`;
+      description += `💰 Price range: $${prices[0]} - $${prices[prices.length - 1]}\n\n`;
       description += `🏆 All matching products:\n`;
       results.forEach((item, index) => {
         const formattedItem = formatProductPrices(item);
@@ -438,7 +438,7 @@ app.post('/api/price-list/search', (req, res) => {
 app.get('/api/price-list/product/:id', (req, res) => {
   try {
     const { id } = req.params;
-    
+
     if (!id) {
       return res.status(400).json({
         success: false,
@@ -447,7 +447,7 @@ app.get('/api/price-list/product/:id', (req, res) => {
     }
 
     // 精确匹配产品ID
-    const product = priceListData.find(item => 
+    const product = priceListData.find(item =>
       String(item['ID Producto'] || '').toLowerCase() === id.toLowerCase()
     );
 
@@ -543,20 +543,20 @@ app.post('/api/price-list/reload', (req, res) => {
 app.post('/api/price-list/tire-search', (req, res) => {
   try {
     // Support two parameter formats for compatibility
-    const { 
-      width, 
-      aspect_ratio, 
-      aspectRatio, 
-      rim_diameter, 
-      diameter, 
+    const {
+      width,
+      aspect_ratio,
+      aspectRatio,
+      rim_diameter,
+      diameter,
       exact_match = false,
       limit = 10  // New: user can specify return count, default 10
     } = req.body;
-    
+
     // Parameter mapping processing
     const finalAspectRatio = aspect_ratio || aspectRatio;
     const finalRimDiameter = rim_diameter || diameter;
-    
+
     // Parameter validation
     if (!width) {
       return res.status(400).json({
@@ -597,7 +597,7 @@ app.post('/api/price-list/tire-search', (req, res) => {
 
     // Determine search type
     const searchType = finalAspectRatio ? 'car' : 'truck';
-    
+
     console.log(`🔍 Tire specification search: ${searchType} - width:${width}, aspect ratio:${finalAspectRatio || 'N/A'}, diameter:${finalRimDiameter || 'N/A'}`);
 
     // Parse tire specifications for all products
@@ -614,15 +614,15 @@ app.post('/api/price-list/tire-search', (req, res) => {
     // Search for matching tires
     const matchingTires = tireProducts.filter(product => {
       const specs = product.tire_specs;
-      
+
       // Basic match: width must match
       if (specs.width != width) return false;
-      
+
       if (searchType === 'car') {
         // Car tire: need to match width, aspect ratio, diameter
         // Auto-enable exact match when user provides complete specifications
         const shouldUseExactMatch = exact_match || (finalAspectRatio && finalRimDiameter);
-        
+
         if (shouldUseExactMatch) {
           // Exact match with intelligent diameter matching (ignore R character)
           const aspectMatch = specs.aspect_ratio == finalAspectRatio;
@@ -636,7 +636,7 @@ app.post('/api/price-list/tire-search', (req, res) => {
         } else {
           // Allow certain specification range matching (only when partial specs provided)
           const aspectMatch = !finalAspectRatio || Math.abs(specs.aspect_ratio - finalAspectRatio) <= 5;
-          
+
           // Diameter match: intelligent matching, ignore R character
           // Whether user inputs 15 or R15, should match both 15 and R15
           let rimMatch = true;
@@ -645,13 +645,13 @@ app.post('/api/price-list/tire-search', (req, res) => {
             const productDiameter = parseInt(String(specs.rim_diameter).replace(/[rR]/g, ''));
             rimMatch = userDiameter === productDiameter;
           }
-          
+
           return aspectMatch && rimMatch;
         }
       } else {
         // Truck tire: only need to match width and diameter
         if (!finalRimDiameter) return true;
-        
+
         // Diameter match: intelligent matching, ignore R character
         const userDiameter = parseInt(String(finalRimDiameter).replace(/[rR]/g, ''));
         const productDiameter = parseInt(String(specs.rim_diameter).replace(/[rR]/g, ''));
@@ -668,13 +668,13 @@ app.post('/api/price-list/tire-search', (req, res) => {
 
     // Format results as unified Agent response format
     const tireType = searchType === 'car' ? 'Car' : 'Truck';
-    const searchSpec = searchType === 'car' 
+    const searchSpec = searchType === 'car'
       ? `${width}/${finalAspectRatio}R${finalRimDiameter}`
       : `${width}R${finalRimDiameter}`;
-    
+
     // Apply user-specified result count limit
     const resultLimit = Math.min(Math.max(parseInt(limit) || 10, 1), 100); // 1-100 range, default 10
-    
+
     // Raw data
     const rawData = {
       searchType: searchType,
@@ -724,10 +724,10 @@ app.post('/api/price-list/tire-search', (req, res) => {
     description += `• Displayed count: ${Math.min(matchingTires.length, resultLimit)}\n`;
     description += `• Tire type: ${tireType}\n`;
     description += `• Search specification: ${searchSpec}\n\n`;
-    
+
     if (matchingTires.length > 0) {
       const formattedFirstTire = formatProductPrices(matchingTires[0]);
-      const formattedLastTire = formatProductPrices(matchingTires[matchingTires.length-1]);
+      const formattedLastTire = formatProductPrices(matchingTires[matchingTires.length - 1]);
       description += `💰 Price range: $${formattedFirstTire['PRECIO FINAL']} - $${formattedLastTire['PRECIO FINAL']}\n\n`;
       description += `🏆 All matching tires:\n`;
       matchingTires.forEach((tire, index) => {
@@ -760,23 +760,23 @@ app.post('/api/price-list/tire-search', (req, res) => {
 });
 
 // Tire specification search API - Spanish version
-app.post('/api/price-list/tire-search-es', (req, res) => {
+app.post('/api/price-list/tire-search-es', async (req, res) => {
   try {
     // Support two parameter formats for compatibility
-    const { 
-      width, 
-      aspect_ratio, 
-      aspectRatio, 
-      rim_diameter, 
-      diameter, 
+    const {
+      width,
+      aspect_ratio,
+      aspectRatio,
+      rim_diameter,
+      diameter,
       exact_match = false,
       limit = 10  // New: user can specify return count, default 10
     } = req.body;
-    
+
     // Parameter mapping processing
     const finalAspectRatio = aspect_ratio || aspectRatio;
     const finalRimDiameter = rim_diameter || diameter;
-    
+
     // Parameter validation
     if (!width) {
       return res.status(400).json({
@@ -817,7 +817,7 @@ app.post('/api/price-list/tire-search-es', (req, res) => {
 
     // Determine search type
     const searchType = finalAspectRatio ? 'car' : 'truck';
-    
+
     console.log(`🔍 Tire specification search (ES): ${searchType} - width:${width}, aspect ratio:${finalAspectRatio || 'N/A'}, diameter:${finalRimDiameter || 'N/A'}`);
 
     // Parse tire specifications for all products
@@ -831,70 +831,124 @@ app.post('/api/price-list/tire-search-es', (req, res) => {
 
     console.log(`📊 Successfully parsed ${tireProducts.length} tire products (ES)`);
 
-    // Search for matching tires
-    const matchingTires = tireProducts.filter(product => {
-      const specs = product.tire_specs;
-      
-      // Basic match: width must match
-      if (specs.width != width) return false;
-      
-      if (searchType === 'car') {
-        // Car tire: need to match width, aspect ratio, diameter
-        // Auto-enable exact match when user provides complete specifications
-        const shouldUseExactMatch = exact_match || (finalAspectRatio && finalRimDiameter);
-        
-        if (shouldUseExactMatch) {
-          // Exact match with intelligent diameter matching (ignore R character)
-          const aspectMatch = specs.aspect_ratio == finalAspectRatio;
-          let rimMatch = false;
-          if (finalRimDiameter) {
-            const userDiameter = parseInt(String(finalRimDiameter).replace(/[rR]/g, ''));
-            const productDiameter = parseInt(String(specs.rim_diameter).replace(/[rR]/g, ''));
-            rimMatch = userDiameter === productDiameter;
-          }
-          return aspectMatch && rimMatch;
-        } else {
-          // Allow certain specification range matching (only when partial specs provided)
-          const aspectMatch = !finalAspectRatio || Math.abs(specs.aspect_ratio - finalAspectRatio) <= 5;
-          
-          // Diameter match: intelligent matching, ignore R character
-          // Whether user inputs 15 or R15, should match both 15 and R15
-          let rimMatch = true;
-          if (finalRimDiameter) {
-            const userDiameter = parseInt(String(finalRimDiameter).replace(/[rR]/g, ''));
-            const productDiameter = parseInt(String(specs.rim_diameter).replace(/[rR]/g, ''));
-            rimMatch = userDiameter === productDiameter;
-          }
-          
-          return aspectMatch && rimMatch;
-        }
-      } else {
-        // Truck tire: only need to match width and diameter
-        if (!finalRimDiameter) return true;
-        
-        // Diameter match: intelligent matching, ignore R character
-        const userDiameter = parseInt(String(finalRimDiameter).replace(/[rR]/g, ''));
-        const productDiameter = parseInt(String(specs.rim_diameter).replace(/[rR]/g, ''));
-        return userDiameter === productDiameter;
-      }
-    });
+    // Search for matching tires Juan
+    const url = "https://api.admovil.net/api/Catalogos/Inventarios/get_productoBusqueda";
 
+    const headers = {
+      "accept": "*/*",
+      "accept-language": "es,es-ES;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+      "content-type": "application/json; text/plain",
+      "origin": "https://grupomagno.admovil.net",
+      "priority": "u=1, i",
+      "referer": "https://grupomagno.admovil.net/",
+      "sec-ch-ua": `"Not;A=Brand";v="99", "Microsoft Edge";v="139", "Chromium";v="139"`,
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": `"Windows"`,
+      "sec-fetch-dest": "empty",
+      "sec-fetch-mode": "cors",
+      "sec-fetch-site": "same-site",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0"
+    };
+
+    const payload = {
+      idEmpG: 2199,
+      idSuc: "1628",
+      descontinuado: true,
+      textoFind: width + " " + finalAspectRatio + " " + finalRimDiameter.replaceAll("R", "")
+    };
+
+    async function fetchData() {
+      try {
+        const response = await fetch(url, {
+          method: "POST",
+          headers: headers,
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        //console.log("Respuesta:", data);
+
+        return data;
+      } catch (error) {
+        console.error("Ocurrió un error:", error);
+        return []
+      }
+    }
+
+    let matchingTires = await fetchData()
+
+
+
+    // const matchingTires = tireProducts.filter(product => {
+    //   const specs = product.tire_specs;
+
+    //   // Basic match: width must match
+    //   if (specs.width != width) return false;
+
+    //   if (searchType === 'car') {
+    //     // Car tire: need to match width, aspect ratio, diameter
+    //     // Auto-enable exact match when user provides complete specifications
+    //     const shouldUseExactMatch = exact_match || (finalAspectRatio && finalRimDiameter);
+
+    //     if (shouldUseExactMatch) {
+    //       // Exact match with intelligent diameter matching (ignore R character)
+    //       const aspectMatch = specs.aspect_ratio == finalAspectRatio;
+    //       let rimMatch = false;
+    //       if (finalRimDiameter) {
+    //         const userDiameter = parseInt(String(finalRimDiameter).replace(/[rR]/g, ''));
+    //         const productDiameter = parseInt(String(specs.rim_diameter).replace(/[rR]/g, ''));
+    //         rimMatch = userDiameter === productDiameter;
+    //       }
+    //       return aspectMatch && rimMatch;
+    //     } else {
+    //       // Allow certain specification range matching (only when partial specs provided)
+    //       const aspectMatch = !finalAspectRatio || Math.abs(specs.aspect_ratio - finalAspectRatio) <= 5;
+
+    //       // Diameter match: intelligent matching, ignore R character
+    //       // Whether user inputs 15 or R15, should match both 15 and R15
+    //       let rimMatch = true;
+    //       if (finalRimDiameter) {
+    //         const userDiameter = parseInt(String(finalRimDiameter).replace(/[rR]/g, ''));
+    //         const productDiameter = parseInt(String(specs.rim_diameter).replace(/[rR]/g, ''));
+    //         rimMatch = userDiameter === productDiameter;
+    //       }
+
+    //       return aspectMatch && rimMatch;
+    //     }
+    //   } else {
+    //     // Truck tire: only need to match width and diameter
+    //     if (!finalRimDiameter) return true;
+
+    //     // Diameter match: intelligent matching, ignore R character
+    //     const userDiameter = parseInt(String(finalRimDiameter).replace(/[rR]/g, ''));
+    //     const productDiameter = parseInt(String(specs.rim_diameter).replace(/[rR]/g, ''));
+    //     return userDiameter === productDiameter;
+    //   }
+    // });
+    // Filter only available tires
+    matchingTires = matchingTires.filter(p => p.existencia && p.existencia > 0);
+    //console.log("Respuesta:", matchingTires);
     // Sort by price
     matchingTires.sort((a, b) => {
-      const priceA = formatPrice(a['PRECIO FINAL']);
-      const priceB = formatPrice(b['PRECIO FINAL']);
+      const priceA = formatPrice(a['precioNeto']);
+      const priceB = formatPrice(b['precioNeto']);
       return priceA - priceB;
     });
 
     // Format results as unified Agent response format
     const tireType = searchType === 'car' ? 'Auto' : 'Camión';
-    const searchSpec = searchType === 'car' 
+    const searchSpec = searchType === 'car'
       ? `${width}/${finalAspectRatio}R${finalRimDiameter}`
       : `${width}R${finalRimDiameter}`;
-    
+
     // Apply user-specified result count limit
     const resultLimit = Math.min(Math.max(parseInt(limit) || 10, 1), 100); // 1-100 range, default 10
-    
+
     // Raw data
     const rawData = {
       searchType: searchType,
@@ -903,10 +957,10 @@ app.post('/api/price-list/tire-search-es', (req, res) => {
       results: matchingTires.slice(0, resultLimit).map(tire => {
         const formattedTire = formatProductPrices(tire);
         return {
-          id: formattedTire['ID Producto'],
-          product: formattedTire['Producto'],
-          stock: formattedTire['Exit.'],
-          price: formattedTire['PRECIO FINAL'],
+          id: formattedTire['clave'],
+          product: formattedTire['descripcion'],
+          stock: formattedTire['existencia'],
+          price: formattedTire['precioNeto'],
           specs: tire.tire_specs
         };
       }),
@@ -931,7 +985,7 @@ app.post('/api/price-list/tire-search-es', (req, res) => {
       // Use user-specified result count limit
       matchingTires.slice(0, resultLimit).forEach(tire => {
         const formattedTire = formatProductPrices(tire);
-        markdownTable += `| ${formattedTire['ID Producto']} | ${formattedTire['Producto']} | ${formattedTire['Exit.']} | $${formattedTire['PRECIO FINAL']} |\n`;
+        markdownTable += `| ${formattedTire['clave']} | ${formattedTire['descripcion']} | ${formattedTire['existencia']} | $${formattedTire['precioNeto']} |\n`;
       });
     } else {
       markdownTable += "| - | No se encontraron neumáticos | - | - |\n";
@@ -945,15 +999,15 @@ app.post('/api/price-list/tire-search-es', (req, res) => {
     description += `• 👁️ Resultados mostrados: ${Math.min(matchingTires.length, resultLimit)}\n`;
     description += `• 🚗 Tipo: ${tireType}\n`;
     description += `• 📏 Especificación: ${searchSpec}\n\n`;
-    
+
     if (matchingTires.length > 0) {
       const formattedFirstTire = formatProductPrices(matchingTires[0]);
-      const formattedLastTire = formatProductPrices(matchingTires[matchingTires.length-1]);
-      description += `💰 Rango de precios: $${formattedFirstTire['PRECIO FINAL']} - $${formattedLastTire['PRECIO FINAL']}\n\n`;
+      const formattedLastTire = formatProductPrices(matchingTires[matchingTires.length - 1]);
+      description += `💰 Rango de precios: $${formattedFirstTire['precioNeto']} - $${formattedLastTire['precioNeto']}\n\n`;
       description += `🎯 Sus opciones de neumáticos:\n`;
       matchingTires.forEach((tire, index) => {
         const formattedTire = formatProductPrices(tire);
-        description += `${index + 1}. ${formattedTire['Producto']} - $${formattedTire['PRECIO FINAL']} (Disponible: ${formattedTire['Exit.']})\n`;
+        description += `${index + 1}. ${formattedTire['descripcion']} - $${formattedTire['precioNeto']} (Disponible: ${formattedTire['existencia']})\n`;
       });
       description += `\n💎 Información importante: Nuestro precio incluye instalación, válvula nueva y servicio de balanceo.\n`;
       description += `\n🤝 En Grupo Magno nos preocupamos por su seguridad y satisfacción. ¿Puedo ayudarle con algo más?`;
@@ -987,7 +1041,7 @@ app.post('/api/price-list/tire-search-es', (req, res) => {
 app.post('/api/price-list/tire-parse', (req, res) => {
   try {
     const { product_name } = req.body;
-    
+
     if (!product_name) {
       return res.status(400).json({
         success: false,
@@ -996,7 +1050,7 @@ app.post('/api/price-list/tire-parse', (req, res) => {
     }
 
     const specs = parseTireSpecification(product_name);
-    
+
     res.json({
       success: true,
       message: 'Tire specification parsing completed',
@@ -1047,7 +1101,7 @@ app.use('*', (req, res) => {
     availableEndpoints: {
       'price-list': [
         'GET /api/price-list/health',
-        'GET /api/price-list/products', 
+        'GET /api/price-list/products',
         'POST /api/price-list/search',
         'GET /api/price-list/product/:id',
         'POST /api/price-list/reload'
