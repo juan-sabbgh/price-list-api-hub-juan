@@ -857,7 +857,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       textoFind: width.toString() + " " + finalAspectRatio.toString() + " " + finalRimDiameter.toString().replaceAll("R", "")
     };
 
-    console.log("Datos enviados a la api de magno", payload)
+    //console.log("Datos enviados a la api de magno", payload)
 
     async function fetchData() {
       try {
@@ -884,54 +884,6 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
 
     let matchingTires = await fetchData()
 
-
-
-    // const matchingTires = tireProducts.filter(product => {
-    //   const specs = product.tire_specs;
-
-    //   // Basic match: width must match
-    //   if (specs.width != width) return false;
-
-    //   if (searchType === 'car') {
-    //     // Car tire: need to match width, aspect ratio, diameter
-    //     // Auto-enable exact match when user provides complete specifications
-    //     const shouldUseExactMatch = exact_match || (finalAspectRatio && finalRimDiameter);
-
-    //     if (shouldUseExactMatch) {
-    //       // Exact match with intelligent diameter matching (ignore R character)
-    //       const aspectMatch = specs.aspect_ratio == finalAspectRatio;
-    //       let rimMatch = false;
-    //       if (finalRimDiameter) {
-    //         const userDiameter = parseInt(String(finalRimDiameter).replace(/[rR]/g, ''));
-    //         const productDiameter = parseInt(String(specs.rim_diameter).replace(/[rR]/g, ''));
-    //         rimMatch = userDiameter === productDiameter;
-    //       }
-    //       return aspectMatch && rimMatch;
-    //     } else {
-    //       // Allow certain specification range matching (only when partial specs provided)
-    //       const aspectMatch = !finalAspectRatio || Math.abs(specs.aspect_ratio - finalAspectRatio) <= 5;
-
-    //       // Diameter match: intelligent matching, ignore R character
-    //       // Whether user inputs 15 or R15, should match both 15 and R15
-    //       let rimMatch = true;
-    //       if (finalRimDiameter) {
-    //         const userDiameter = parseInt(String(finalRimDiameter).replace(/[rR]/g, ''));
-    //         const productDiameter = parseInt(String(specs.rim_diameter).replace(/[rR]/g, ''));
-    //         rimMatch = userDiameter === productDiameter;
-    //       }
-
-    //       return aspectMatch && rimMatch;
-    //     }
-    //   } else {
-    //     // Truck tire: only need to match width and diameter
-    //     if (!finalRimDiameter) return true;
-
-    //     // Diameter match: intelligent matching, ignore R character
-    //     const userDiameter = parseInt(String(finalRimDiameter).replace(/[rR]/g, ''));
-    //     const productDiameter = parseInt(String(specs.rim_diameter).replace(/[rR]/g, ''));
-    //     return userDiameter === productDiameter;
-    //   }
-    // });
     // Filter only available tires
     matchingTires = matchingTires.filter(p => p.existencia && p.existencia > 0);
     //console.log("Respuesta:", matchingTires);
@@ -986,7 +938,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
         truckTires: tireProducts.filter(p => p.tire_specs.type === 'truck').length
       }
     };
-    console.log(rawData)
+    //console.log(rawData)
 
     // Markdown table format (Spanish)
     let markdownTable = "| ID Producto | Nombre del Producto | Stock | Precio |\n|:------------|:--------------------|:------|:-------|\n";
@@ -1045,6 +997,44 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
     });
   }
 });
+
+// Tire specification search API - Spanish version
+app.post('/api/appointment/create', async (req, res) => {
+  try {
+    // Support two parameter formats for compatibility
+    const {
+      tire,
+      name,
+      contact_number,
+      date,
+      time
+    } = req.body;
+
+    //create appointment code
+
+    //create new row in sheets
+    
+
+
+
+    // Return unified format
+    res.json({
+      raw: rawData,
+      markdown: markdownTable,
+      type: "markdown",
+      desc: description
+    });
+
+  } catch (error) {
+    console.error('Appointment creation error', error);
+    res.status(500).json({
+      success: false,
+      error: 'Ocurrió un error al crear la reservacion'
+    });
+  }
+});
+
+
 
 // Tire specification parsing test endpoint
 app.post('/api/price-list/tire-parse', (req, res) => {
