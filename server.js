@@ -74,9 +74,9 @@ function formatPrice(price) {
 function formatProductPrices(product) {
   return {
     ...product,
-    'Costo Uni Unitario': formatPrice(product['Costo Uni Unitario']),
-    'COSTO CON IVA': formatPrice(product['COSTO CON IVA']),
-    'PRECIO FINAL': formatPrice(product['PRECIO FINAL'])
+    'Costo Uni Unitario': formatPrice(product['precioNeto']),
+    'COSTO CON IVA': formatPrice(product['precioNeto']),
+    'PRECIO FINAL': formatPrice(product['precioNeto'])
   };
 }
 
@@ -961,7 +961,13 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
           product: formattedTire['descripcion'],
           stock: formattedTire['existencia'],
           price: formattedTire['precioNeto'],
-          specs: tire.tire_specs
+          specs: {
+            width: width,
+            aspect_ratio: finalAspectRatio,
+            rim_diameter: finalRimDiameter,
+            type: "car",
+            original: formattedTire['descripcion']
+          }
         };
       }),
       searchParams: {
