@@ -854,7 +854,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       idEmpG: 2199,
       idSuc: "1628",
       descontinuado: true,
-      textoFind: width + " " + finalAspectRatio + " " + finalRimDiameter.replaceAll("R", "")
+      textoFind: width.toString() + " " + finalAspectRatio.toString() + " " + finalRimDiameter.toString().replaceAll("R", "")
     };
 
     async function fetchData() {
