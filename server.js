@@ -857,6 +857,8 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       textoFind: width.toString() + " " + finalAspectRatio.toString() + " " + finalRimDiameter.toString().replaceAll("R", "")
     };
 
+    console.log("Datos enviados a la api de magno", payload)
+
     async function fetchData() {
       try {
         const response = await fetch(url, {
@@ -984,6 +986,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
         truckTires: tireProducts.filter(p => p.tire_specs.type === 'truck').length
       }
     };
+    console.log(rawData)
 
     // Markdown table format (Spanish)
     let markdownTable = "| ID Producto | Nombre del Producto | Stock | Precio |\n|:------------|:--------------------|:------|:-------|\n";
