@@ -995,8 +995,8 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       },
       statistics: {
         totalTireProducts: matchingTires.length,
-        carTires: matchingTires.filter(p => p.tire_specs.type === 'car').length,
-        truckTires: matchingTires.filter(p => p.tire_specs.type === 'truck').length
+        carTires: matchingTires.length,
+        //truckTires: matchingTires.filter(p => p.tire_specs.type === 'truck').length
       }
     };
     //console.log(rawData)
