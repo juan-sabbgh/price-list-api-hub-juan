@@ -913,6 +913,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       descontinuado: true,
       textoFind: width.toString() + " " + finalAspectRatio.toString() + " " + finalRimDiameter.toString().replaceAll("R", "") + " " + brand ? brand : ""
     };
+    console.log(width.toString() + " " + finalAspectRatio.toString() + " " + finalRimDiameter.toString().replaceAll("R", "") + " " + brand ? brand : "")
 
     //console.log("Datos enviados a la api de magno", payload)
 
