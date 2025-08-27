@@ -5,10 +5,66 @@ const rateLimit = require('express-rate-limit');
 const XLSX = require('xlsx');
 const path = require('path');
 const fs = require('fs');
+const { google } = require("googleapis");
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+SHEET_ID = process.env.SPREEDSHEET_ID
+
+const GOOGLE_SHEETS_CREDENTIALS = {
+  "type": "service_account",
+  "project_id": process.env.GOOGLE_PROJECT_ID,
+  "private_key_id": process.env.GOOGLE_PRIVATE_KEY_ID,
+  "private_key": process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+  "client_email": process.env.GOOGLE_CLIENT_EMAIL,
+  "client_id": process.env.GOOGLE_CLIENT_ID,
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": process.env.GOOGLE_CLIENT_X509_CERT_URL,
+  "universe_domain": "googleapis.com"
+}
+
+const auth = new google.auth.GoogleAuth({
+  credentials: GOOGLE_SHEETS_CREDENTIALS, // archivo de cuenta de servicio
+  scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+});
+
+async function leerHoja() {
+  const client = await auth.getClient();
+  const sheets = google.sheets({ version: "v4", auth: client });
+
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SHEET_ID,
+    range: "Hoja 1!A1:C5",
+  });
+
+  console.log("Datos:", res.data.values);
+}
+
+async function agregarFila(valores) {
+  const client = await auth.getClient();
+  const sheets = google.sheets({ version: "v4", auth: client });
+
+  const res = await sheets.spreadsheets.values.append({
+    spreadsheetId: SHEET_ID,        // ID de la hoja
+    range: "Hoja1!A:G",            // Rango (en qué columnas insertar)
+    valueInputOption: "USER_ENTERED", // Usa USER_ENTERED para que respete formatos de Google Sheets
+    insertDataOption: "INSERT_ROWS",  // Inserta nuevas filas
+    requestBody: {
+      values: [valores], // 👈 recibe un array con los datos de la fila
+    },
+  });
+
+  console.log("Fila añadida:", res.data.updates);
+  return true
+}
+
+//leerHoja();
+
+//testing google api
+
 
 // 中间件
 app.use(helmet());
@@ -770,6 +826,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       rim_diameter,
       diameter,
       exact_match = false,
+      brand,
       limit = 10  // New: user can specify return count, default 10
     } = req.body;
 
@@ -854,7 +911,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       idEmpG: 2199,
       idSuc: "1628",
       descontinuado: true,
-      textoFind: width.toString() + " " + finalAspectRatio.toString() + " " + finalRimDiameter.toString().replaceAll("R", "")
+      textoFind: width.toString() + " " + finalAspectRatio.toString() + " " + finalRimDiameter.toString().replaceAll("R", "") + " " + brand ? brand : ""
     };
 
     //console.log("Datos enviados a la api de magno", payload)
@@ -872,7 +929,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
         }
 
         const data = await response.json();
-        
+
         //console.log("Respuesta:", data);
 
         return data;
@@ -970,8 +1027,20 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
         const formattedTire = formatProductPrices(tire);
         description += `${index + 1}. ${formattedTire['descripcion']} - $${formattedTire['precioNeto']} (Disponible: ${formattedTire['existencia']})\n`;
       });
-      description += `\n💎 Información importante: Nuestro precio incluye instalación, válvula nueva y servicio de balanceo.\n`;
-      description += `\n🤝 En Grupo Magno nos preocupamos por su seguridad y satisfacción. ¿Puedo ayudarle con algo más?`;
+      description += `\n💎 Nuestro precio ya incluye:\n`;
+      description += `✅ Instalación profesional\n`;
+      description += `✅ Válvula nueva\n`;
+      description += `✅ Balanceo láser\n`;
+      description += `✅ Inflado con nitrógeno + garantía 12 meses\n`;
+
+      description += `\n📍 Le invitamos a visitarnos en nuestra sucursal:\n`;
+      description += `Calz de las Armas 591, Col Providencia, Azcapotzalco CDMX, CP 02440\n`;
+      description += `📞 Tel: 55 2637 3003\n`;
+      description += "https://maps.app.goo.gl/uuYei436nN8pHw34A?g_st=ic"
+      description += `🕐 Horarios: Lunes-Viernes 9:00-18:00 • Sábados 9:00-15:00\n`;
+
+      description += `\n🤝 Presentando esta cotización en sucursal, con gusto podemos ofrecerle un **descuento adicional**.\n`;
+      description += `¿Le gustaría que le agende una cita para la instalación de sus llantas, o prefiere visitarnos directamente en el horario que le acomode?`;
     } else {
       description += `❌ Lo siento, no se encontraron neumáticos de ${tireType.toLowerCase()} que coincidan con su búsqueda\n\n`;
       description += `💡 Permítame sugerirle algunas opciones:\n`;
@@ -1004,12 +1073,13 @@ app.post('/api/appointment/create', async (req, res) => {
     // Support two parameter formats for compatibility
     const {
       llanta,
+      servicio,
       nombre,
       numero_contacto,
       fecha,
       hora
     } = req.body;
-    
+
     // check if data is passed correctly
     console.log("llanta: ", llanta)
     console.log("nombre: ", nombre)
@@ -1018,19 +1088,34 @@ app.post('/api/appointment/create', async (req, res) => {
     console.log("hora: ", hora)
 
     //create appointment code
-
+    const appointment_code = Math.floor(100000 + Math.random() * 900000);
     //create new row in sheets
-    
+    const row_data = [
+      appointment_code,
+      nombre,
+      numero_contacto ? numero_contacto : "",
+      llanta ? llanta : "",
+      servicio ? servicio : "",
+      fecha ? fecha : "",
+      hora ? hora : ""
+    ]
+
+    const response_add_row = await agregarFila(row_data)
+
+    if (response_add_row) {
+      // Return unified format
+      res.json({
+        raw: rawData,
+        markdown: markdownTable,
+        type: "markdown",
+        desc: description
+      });
+    }
 
 
 
-    // Return unified format
-    res.json({
-      raw: rawData,
-      markdown: markdownTable,
-      type: "markdown",
-      desc: description
-    });
+
+
 
   } catch (error) {
     console.error('Appointment creation error', error);
