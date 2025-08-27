@@ -49,7 +49,7 @@ async function agregarFila(valores) {
 
   const res = await sheets.spreadsheets.values.append({
     spreadsheetId: SHEET_ID,        // ID de la hoja
-    range: "Hoja1",        // Rango (en qué columnas insertar)
+    range: "Hoja 1!A:G",        // Rango (en qué columnas insertar)
     valueInputOption: "USER_ENTERED", // Usa USER_ENTERED para que respete formatos de Google Sheets
     insertDataOption: "INSERT_ROWS",  // Inserta nuevas filas
     requestBody: {
@@ -57,7 +57,7 @@ async function agregarFila(valores) {
     },
   });
 
-  console.log("Fila añadida:", res.data.updates);
+  //console.log("Fila añadida:", res.data.updates);
   return true
 }
 
