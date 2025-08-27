@@ -1003,12 +1003,19 @@ app.post('/api/appointment/create', async (req, res) => {
   try {
     // Support two parameter formats for compatibility
     const {
-      tire,
-      name,
-      contact_number,
-      date,
-      time
+      llanta,
+      nombre,
+      numero_contacto,
+      fecha,
+      hora
     } = req.body;
+    
+    // check if data is passed correctly
+    console.log("llanta: ", llanta)
+    console.log("nombre: ", nombre)
+    console.log("numero_contacto: ", numero_contacto)
+    console.log("fecha: ", fecha)
+    console.log("hora: ", hora)
 
     //create appointment code
 
