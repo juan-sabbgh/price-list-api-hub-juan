@@ -117,7 +117,7 @@ function loadExcelData() {
 }
 
 // Load data on startup
-loadExcelData();
+//loadExcelData();
 
 // Price formatting function - convert to integer
 function formatPrice(price) {
@@ -878,15 +878,15 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
     console.log(`🔍 Tire specification search (ES): ${searchType} - width:${width}, aspect ratio:${finalAspectRatio || 'N/A'}, diameter:${finalRimDiameter || 'N/A'}`);
 
     // Parse tire specifications for all products
-    const tireProducts = priceListData.map(product => {
-      const specs = parseTireSpecification(product['Producto']);
-      return {
-        ...product,
-        tire_specs: specs
-      };
-    }).filter(product => product.tire_specs.width !== null); // Only keep products with parseable specs
+    // const tireProducts = priceListData.map(product => {
+    //   const specs = parseTireSpecification(product['Producto']);
+    //   return {
+    //     ...product,
+    //     tire_specs: specs
+    //   };
+    // }).filter(product => product.tire_specs.width !== null); // Only keep products with parseable specs
 
-    console.log(`📊 Successfully parsed ${tireProducts.length} tire products (ES)`);
+    // console.log(`📊 Successfully parsed ${tireProducts.length} tire products (ES)`);
 
     // Search for matching tires Juan
     const url = "https://api.admovil.net/api/Catalogos/Inventarios/get_productoBusqueda";
@@ -911,9 +911,12 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       idEmpG: 2199,
       idSuc: "1628",
       descontinuado: true,
-      textoFind: width.toString() + " " + finalAspectRatio.toString() + " " + finalRimDiameter.toString().replaceAll("R", "") + " " + brand ? brand : ""
+      textoFind: `${width} ${finalAspectRatio} ${finalRimDiameter.toString().replaceAll("R", "")} ${brand || ""}`
     };
-    console.log(width.toString() + " " + finalAspectRatio.toString() + " " + finalRimDiameter.toString().replaceAll("R", "") + " " + brand ? brand : "")
+    console.log(
+      `${width} ${finalAspectRatio} ${finalRimDiameter.toString().replaceAll("R", "")} ${brand || ""}`
+    );
+
 
     //console.log("Datos enviados a la api de magno", payload)
 
@@ -991,9 +994,9 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
         limit: resultLimit
       },
       statistics: {
-        totalTireProducts: tireProducts.length,
-        carTires: tireProducts.filter(p => p.tire_specs.type === 'car').length,
-        truckTires: tireProducts.filter(p => p.tire_specs.type === 'truck').length
+        totalTireProducts: matchingTires.length,
+        carTires: matchingTires.filter(p => p.tire_specs.type === 'car').length,
+        truckTires: matchingTires.filter(p => p.tire_specs.type === 'truck').length
       }
     };
     //console.log(rawData)
