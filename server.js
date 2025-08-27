@@ -1014,8 +1014,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
     }
 
     // Description information (Spanish) - Version C: Warm Service Style
-    let description = `🌟 ¡Hola! Me complace atenderle. Soy su asistente de ventas de **Llantasyservicios.mx** (también conocido como **Grupo Magno**), su aliado en neumáticos y servicios automotrices en Ciudad de México.\n\n`;
-    description += `🔍 Búsqueda completada para neumáticos de ${tireType} - Medida: ${searchSpec}\n\n`;
+    let description = `🔍 Búsqueda completada para neumáticos de ${tireType} - Medida: ${searchSpec}\n\n`;
     description += `📋 Información de su búsqueda:\n`;
     description += `• ✅ Neumáticos encontrados: ${matchingTires.length}\n`;
     description += `• 👁️ Resultados mostrados: ${Math.min(matchingTires.length, resultLimit)}\n`;
@@ -1106,8 +1105,37 @@ app.post('/api/appointment/create', async (req, res) => {
 
     const response_add_row = await agregarFila(row_data)
 
+
+
     if (response_add_row) {
+      const rawData = {
+        "estado_reservacion": "Generada exitosamente",
+        "codigo_reservacion": appointment_code,
+        "datos_reserva": {
+          "nombre": nombre,
+          "servicio": servicio ? servicio : "",
+          "llanta": llanta ? llanta : "",
+          "fecha": fecha ? fecha : "",
+          "hora": hora ? hora : ""
+        }
+      }
+
+      let description = `📅 ¡Su reservación ha sido generada exitosamente!\n\n`;
+      description += `🔑 Código de reservación: **${appointment_code}**\n\n`;
+      description += `📋 Detalles de su cita:\n`;
+      description += `• 👤 Nombre: ${nombre}\n`;
+      description += `• 🔧 Servicio: ${servicio ? servicio : "N/A"}\n`;
+      description += `• 🛞 Llanta: ${llanta ? llanta : "N/A"}\n`;
+      description += `• 📆 Fecha: ${fecha ? fecha : "N/A"}\n`;
+      description += `• ⏰ Hora: ${hora ? hora : "N/A"}\n\n`;
+      description += `🤝 Le esperamos en nuestra sucursal:\n`;
+      description += `📍 Calz de las Armas 591, Col. Providencia, Azcapotzalco CDMX, CP 02440\n`;
+      description += `📞 Tel: 55 2637 3003\n`;
+      description += `🕐 Horarios: Lunes-Viernes 9:00-18:00 • Sábados 9:00-15:00\n\n`;
+
+      const markdownTable = "| - | Datos de la reserva | - | - |\n"
       // Return unified format
+
       res.json({
         raw: rawData,
         markdown: markdownTable,
