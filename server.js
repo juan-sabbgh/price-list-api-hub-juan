@@ -49,7 +49,7 @@ async function agregarFila(valores) {
 
   const res = await sheets.spreadsheets.values.append({
     spreadsheetId: SHEET_ID,        // ID de la hoja
-    range: "Hoja1!A:G",            // Rango (en qué columnas insertar)
+    range: "Hoja1!A1:G1",        // Rango (en qué columnas insertar)
     valueInputOption: "USER_ENTERED", // Usa USER_ENTERED para que respete formatos de Google Sheets
     insertDataOption: "INSERT_ROWS",  // Inserta nuevas filas
     requestBody: {
@@ -1041,7 +1041,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       description += `Calz de las Armas 591, Col Providencia, Azcapotzalco CDMX, CP 02440\n`;
       description += `📞 Tel: 55 2637 3003\n`;
       description += "https://maps.app.goo.gl/uuYei436nN8pHw34A?g_st=ic"
-      description += `🕐 Horarios: Lunes-Viernes 9:00-18:00 • Sábados 9:00-15:00\n`;
+      description += `\n🕐 Horarios: Lunes-Viernes 9:00-18:00 • Sábados 9:00-15:00\n`;
 
       description += `\n🤝 Presentando esta cotización en sucursal, con gusto podemos ofrecerle un **descuento adicional**.\n`;
       description += `¿Le gustaría que le agende una cita para la instalación de sus llantas, o prefiere visitarnos directamente en el horario que le acomode?`;
