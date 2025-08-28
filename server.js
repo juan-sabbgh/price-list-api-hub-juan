@@ -25,6 +25,8 @@ const GOOGLE_SHEETS_CREDENTIALS = {
   "client_x509_cert_url": process.env.GOOGLE_CLIENT_X509_CERT_URL,
   "universe_domain": "googleapis.com"
 }
+const MAGNO_ID_EMP = process.env.MAGNO_ID_EMP
+const MAGNO_SEARCH_URL = process.env.MAGNO_SEARCH_URL
 
 const auth = new google.auth.GoogleAuth({
   credentials: GOOGLE_SHEETS_CREDENTIALS, // archivo de cuenta de servicio
@@ -889,7 +891,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
     // console.log(`📊 Successfully parsed ${tireProducts.length} tire products (ES)`);
 
     // Search for matching tires Juan
-    const url = "https://api.admovil.net/api/Catalogos/Inventarios/get_productoBusqueda";
+    const url = MAGNO_SEARCH_URL;
 
     const headers = {
       "accept": "*/*",
@@ -908,7 +910,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
     };
 
     const payload = {
-      idEmpG: 2199,
+      idEmpG: MAGNO_ID_EMP,
       idSuc: "1628",
       descontinuado: true,
       textoFind: `${width} ${finalAspectRatio} ${finalRimDiameter.toString().replaceAll("R", "")} ${brand || ""}`
@@ -945,8 +947,16 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
 
     let matchingTires = await fetchData()
 
+    // Construir prefijo de búsqueda (ejemplo: 205 55 14 ó 205 55 R14)
+    const regex = new RegExp(
+      `^${width}\\s+${finalAspectRatio}\\s+(R?${finalRimDiameter.replace("R", "")})`,
+      "i"
+    );
+
     // Filter only available tires
-    matchingTires = matchingTires.filter(p => p.existencia && p.existencia > 0);
+    matchingTires = matchingTires.filter(p =>
+      p.existencia && p.existencia > 0 && regex.test(p.descripcion)
+    );
     //console.log("Respuesta:", matchingTires);
     // Sort by price
     matchingTires.sort((a, b) => {
