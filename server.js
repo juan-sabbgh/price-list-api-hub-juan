@@ -1115,8 +1115,6 @@ app.post('/api/appointment/create', async (req, res) => {
 
     const response_add_row = await agregarFila(row_data)
 
-
-
     if (response_add_row) {
       const rawData = {
         "estado_reservacion": "Generada exitosamente",
@@ -1143,8 +1141,44 @@ app.post('/api/appointment/create', async (req, res) => {
       description += `📞 Tel: 55 2637 3003\n`;
       description += `🕐 Horarios: Lunes-Viernes 9:00-18:00 • Sábados 9:00-15:00\n\n`;
 
-      const markdownTable = "| - | Se agendó la reservación con exito | - | - |\n"
+      const markdownTable = "| Se agendó la reservación con exito |\n"
       // Return unified format
+
+      res.json({
+        raw: rawData,
+        markdown: markdownTable,
+        type: "markdown",
+        desc: description
+      });
+    }
+
+    else {
+      const rawData = {
+        "estado_reservacion": "No se pudo generar",
+        "codigo_reservacion": appointment_code,
+        "datos_reserva": {
+          "nombre": nombre,
+          "servicio": servicio ? servicio : "",
+          "llanta": llanta ? llanta : "",
+          "fecha": fecha ? fecha : "",
+          "hora": hora ? hora : ""
+        }
+      }
+
+      let description = `⚠️ Lamentamos informarle que **no se pudo generar su reservación en este momento**.\n\n`;
+      description += `🔑 Código de intento: **${appointment_code}**\n\n`;
+      description += `📋 Detalles que intentó registrar:\n`;
+      description += `• 👤 Nombre: ${nombre}\n`;
+      description += `• 🔧 Servicio: ${servicio ? servicio : "N/A"}\n`;
+      description += `• 🛞 Llanta: ${llanta ? llanta : "N/A"}\n`;
+      description += `• 📆 Fecha: ${fecha ? fecha : "N/A"}\n`;
+      description += `• ⏰ Hora: ${hora ? hora : "N/A"}\n\n`;
+      description += `🙏 Por favor, intente nuevamente en unos minutos o comuníquese con nosotros para apoyo directo.\n\n`;
+      description += `📍 Grupo Magno – Calz de las Armas 591, Col. Providencia, Azcapotzalco CDMX, CP 02440\n`;
+      description += `📞 Tel: 55 2637 3003\n`;
+      description += `🕐 Horarios: Lunes-Viernes 9:00-18:00 • Sábados 9:00-15:00`;
+
+      const markdownTable = "| ❌ No se pudo agendar la reservación |\n";
 
       res.json({
         raw: rawData,
