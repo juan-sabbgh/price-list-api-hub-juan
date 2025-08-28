@@ -47,7 +47,7 @@ async function leerHoja() {
 
 async function obtenerNumeroFilas() {
   try {
-    const spreadsheetId = SPREEDSHEET_ID
+    const spreadsheetId = SHEET_ID
     const sheetName = 'Hoja 1'
     const client = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: client });
