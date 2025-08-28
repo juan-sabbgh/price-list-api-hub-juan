@@ -1133,7 +1133,7 @@ app.post('/api/appointment/create', async (req, res) => {
       description += `📞 Tel: 55 2637 3003\n`;
       description += `🕐 Horarios: Lunes-Viernes 9:00-18:00 • Sábados 9:00-15:00\n\n`;
 
-      const markdownTable = ""
+      const markdownTable = "| - | Se agendó la reservación con exito | - | - |\n"
       // Return unified format
 
       res.json({
