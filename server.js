@@ -1122,7 +1122,7 @@ app.post('/api/appointment/create', async (req, res) => {
 
       let description = `📅 ¡Su reservación ha sido generada exitosamente!\n\n`;
       description += `🔑 Código de reservación: **${appointment_code}**\n\n`;
-      description += `📋 Detalles de su cita:\n`;
+      description += `📋 Detalles de su reservación:\n`;
       description += `• 👤 Nombre: ${nombre}\n`;
       description += `• 🔧 Servicio: ${servicio ? servicio : "N/A"}\n`;
       description += `• 🛞 Llanta: ${llanta ? llanta : "N/A"}\n`;
@@ -1133,7 +1133,7 @@ app.post('/api/appointment/create', async (req, res) => {
       description += `📞 Tel: 55 2637 3003\n`;
       description += `🕐 Horarios: Lunes-Viernes 9:00-18:00 • Sábados 9:00-15:00\n\n`;
 
-      const markdownTable = "| - | Datos de la reserva | - | - |\n"
+      const markdownTable = ""
       // Return unified format
 
       res.json({
