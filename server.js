@@ -45,6 +45,27 @@ async function leerHoja() {
   console.log("Datos:", res.data.values);
 }
 
+async function obtenerNumeroFilas() {
+  try {
+    const spreadsheetId = SPREEDSHEET_ID
+    const sheetName = 'Hoja 1'
+    const client = await auth.getClient();
+    const sheets = google.sheets({ version: "v4", auth: client });
+
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${sheetName}`,
+    });
+
+    const filas = response.data.values || [];
+    return filas.length;
+
+  } catch (error) {
+    console.error('Error al obtener número de filas:', error);
+    throw error;
+  }
+}
+
 async function agregarFila(valores) {
   const client = await auth.getClient();
   const sheets = google.sheets({ version: "v4", auth: client });
@@ -1101,7 +1122,9 @@ app.post('/api/appointment/create', async (req, res) => {
     console.log("hora: ", hora)
 
     //create appointment code
-    const appointment_code = Math.floor(100000 + Math.random() * 900000);
+    //const appointment_code = Math.floor(100000 + Math.random() * 900000);
+    const num_registros = await obtenerNumeroFilas();
+    const appointment_code = `CRDYNA${num_registros}`
     //create new row in sheets
     const row_data = [
       appointment_code,
