@@ -1038,7 +1038,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       // Use user-specified result count limit
       matchingTires.slice(0, resultLimit).forEach((tire, index) => {
         const formattedTire = formatProductPrices(tire);
-        productTable += `| ${index + 1} | ${formattedTire['descripcion']} | ${formattedTire['existencia']} | $${formattedTire['precioNeto']} |\n`;
+        markdownTable += `| ${index + 1} | ${formattedTire['descripcion']} | ${formattedTire['existencia']} | $${formattedTire['precioNeto']} |\n`;
       });
     } else {
       markdownTable += "| - | No se encontraron neumáticos | - | - |\n";
