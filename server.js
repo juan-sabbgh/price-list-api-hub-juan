@@ -1059,7 +1059,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       description += `🎯 Sus opciones de neumáticos:\n`;
       matchingTires.forEach((tire, index) => {
         const formattedTire = formatProductPrices(tire);
-        description += `${index + 1}. ${formattedTire['descripcion']} - $${formattedTire['precioNeto']} (Disponible: ${formattedTire['existencia']})\n`;
+        description += `#${index + 1}. ${formattedTire['descripcion']} - $${formattedTire['precioNeto']} (Disponible: ${formattedTire['existencia']})\n`;
       });
       description += `\n💎 Nuestro precio ya incluye:\n`;
       description += `✅ Instalación profesional\n`;
@@ -1070,10 +1070,10 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       description += `\n📍 Le invitamos a visitarnos en nuestra sucursal:\n`;
       description += `Calz de las Armas 591, Col Providencia, Azcapotzalco CDMX, CP 02440\n`;
       description += `📞 Tel: 55 2637 3003\n`;
-      description += "https://maps.app.goo.gl/uuYei436nN8pHw34A?g_st=ic"
+      //description += "https://maps.app.goo.gl/uuYei436nN8pHw34A?g_st=ic"
       description += `\n🕐 Horarios: Lunes-Viernes 9:00-18:00 • Sábados 9:00-15:00\n`;
 
-      description += `\n🤝 Presentando esta cotización en sucursal, con gusto podemos ofrecerle un **descuento adicional**.\n`;
+      //description += `\n🤝 Presentando esta cotización en sucursal, con gusto podemos ofrecerle un **descuento adicional**.\n`;
       description += `¿Le gustaría que le agende una cita para la instalación de sus llantas, o prefiere visitarnos directamente en el horario que le acomode?`;
     } else {
       description += `❌ Lo siento, no se encontraron neumáticos de ${tireType.toLowerCase()} que coincidan con su búsqueda\n\n`;
