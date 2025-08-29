@@ -1059,7 +1059,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       description += `🎯 Sus opciones de neumáticos:\n`;
       matchingTires.forEach((tire, index) => {
         const formattedTire = formatProductPrices(tire);
-        description += `#${index + 1}. ${formattedTire['descripcion']} - $${formattedTire['precioNeto']} (Disponible: ${formattedTire['existencia']})\n`;
+        description += `-${index + 1}. ${formattedTire['descripcion']} - $${formattedTire['precioNeto']} (Disponible: ${formattedTire['existencia']})\n`;
       });
       description += `\n💎 Nuestro precio ya incluye:\n`;
       description += `✅ Instalación profesional\n`;
