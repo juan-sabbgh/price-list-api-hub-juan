@@ -1033,12 +1033,12 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
     //console.log(rawData)
 
     // Markdown table format (Spanish)
-    let markdownTable = "| ID Producto | Nombre del Producto | Stock | Precio |\n|:------------|:--------------------|:------|:-------|\n";
+    let markdownTable = "| # | Nombre del Producto | Stock | Precio |\n|:------------|:--------------------|:------|:-------|\n";
     if (matchingTires.length > 0) {
       // Use user-specified result count limit
-      matchingTires.slice(0, resultLimit).forEach(tire => {
+      matchingTires.slice(0, resultLimit).forEach((tire, index) => {
         const formattedTire = formatProductPrices(tire);
-        markdownTable += `| ${formattedTire['clave']} | ${formattedTire['descripcion']} | ${formattedTire['existencia']} | $${formattedTire['precioNeto']} |\n`;
+        productTable += `| ${index + 1} | ${formattedTire['descripcion']} | ${formattedTire['existencia']} | $${formattedTire['precioNeto']} |\n`;
       });
     } else {
       markdownTable += "| - | No se encontraron neumáticos | - | - |\n";
@@ -1059,7 +1059,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       description += `🎯 Sus opciones de neumáticos:\n`;
       matchingTires.forEach((tire, index) => {
         const formattedTire = formatProductPrices(tire);
-        description += `${index + 1}\. ${formattedTire['descripcion']} - $${formattedTire['precioNeto']} (Disponible: ${formattedTire['existencia']})\n`;
+        description += `${index + 1}. ${formattedTire['descripcion']} - $${formattedTire['precioNeto']} (Disponible: ${formattedTire['existencia']})\n`;
       });
       description += `\n💎 Nuestro precio ya incluye:\n`;
       description += `✅ Instalación profesional\n`;
