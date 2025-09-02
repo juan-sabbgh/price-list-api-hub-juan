@@ -1059,7 +1059,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       description += `🎯 Sus opciones de neumáticos:\n`;
       matchingTires.forEach((tire, index) => {
         const formattedTire = formatProductPrices(tire);
-        description += `${index + 1}. ${formattedTire['descripcion']} - ** $${formattedTire['precioNeto']} ** (Disponible: ${formattedTire['existencia']})\n`;
+        description += `${index + 1}. ${formattedTire['descripcion']} - *$${formattedTire['precioNeto']}* (Disponible: ${formattedTire['existencia']})\n`;
       });
       description += `\n💎 Nuestro precio ya incluye:\n`;
       description += `✅ Instalación profesional\n`;
@@ -1078,9 +1078,9 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       description += `¿Le gustaría que le agende una cita para la instalación de sus llantas, o prefiere visitarnos directamente en el horario que le acomode?`;
     } else {
       description += `❌ Lamentamos informarle que no encontramos llantas ${tireType.toLowerCase()} con esas especificaciones en nuestro inventario actual\n\n`;
-      description += `🌟 ¡Pero no se preocupe! Podemos gestionar un **pedido especial** para usted. Las llantas por pedido tardan aproximadamente 1 día hábil en llegar\n\n`;
+      description += `🌟 ¡Pero no se preocupe! Podemos gestionar un *pedido especial* para usted. Las llantas por pedido tardan aproximadamente 1 día hábil en llegar\n\n`;
       description += `📞 Para coordinar su pedido especial, contacte a nuestro equipo de servicio al cliente:\n`;
-      description += `**55 2637 3003**\n\n`;
+      description += `*55 2637 3003*\n\n`;
       description += `💡 También puedo ayudarle con:\n`;
       description += `• 🔍 Verificar juntos las especificaciones de la llanta\n`;
       description += `• 🛞 Buscar con otras medidas alternativas\n`;
