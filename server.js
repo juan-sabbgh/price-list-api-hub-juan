@@ -1059,13 +1059,14 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       description += `🎯 Sus opciones de neumáticos:\n`;
       matchingTires.forEach((tire, index) => {
         const formattedTire = formatProductPrices(tire);
-        description += `${index + 1}. ${formattedTire['descripcion']} - $${formattedTire['precioNeto']} (Disponible: ${formattedTire['existencia']})\n`;
+        description += `${index + 1}. ${formattedTire['descripcion']} - **$${formattedTire['precioNeto']}** (Disponible: ${formattedTire['existencia']})\n`;
       });
       description += `\n💎 Nuestro precio ya incluye:\n`;
       description += `✅ Instalación profesional\n`;
       description += `✅ Válvula nueva\n`;
-      description += `✅ Balanceo láser\n`;
+      description += `✅ Balanceo por computadora\n`;
       description += `✅ Inflado con nitrógeno + garantía 12 meses\n`;
+      description += `✅ Rotación gratis a partir de 2 llantas\n`;
 
       description += `\n📍 Le invitamos a visitarnos en nuestra sucursal:\n`;
       description += `Calz de las Armas 591, Col Providencia, Azcapotzalco CDMX, CP 02440\n`;
@@ -1076,12 +1077,14 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       //description += `\n🤝 Presentando esta cotización en sucursal, con gusto podemos ofrecerle un **descuento adicional**.\n`;
       description += `¿Le gustaría que le agende una cita para la instalación de sus llantas, o prefiere visitarnos directamente en el horario que le acomode?`;
     } else {
-      description += `❌ Lo siento, no se encontraron neumáticos de ${tireType.toLowerCase()} que coincidan con su búsqueda\n\n`;
-      description += `💡 Permítame sugerirle algunas opciones:\n`;
-      description += `• 🔍 Verifiquemos juntos si las especificaciones del neumático son correctas\n`;
-      description += `• 🛞 Puedo ayudarle a buscar con otras especificaciones de tamaño\n`;
-      description += `• 📞 También puede contactar directamente a nuestro equipo de servicio al cliente\n\n`;
-      description += `🌟 En Llantasyservicios.mx estamos comprometidos con encontrar la mejor solución para usted. ¡No se preocupe, seguro encontramos lo que necesita!`;
+      description += `❌ Lamentamos informarle que no encontramos llantas ${tireType.toLowerCase()} con esas especificaciones en nuestro inventario actual\n\n`;
+      description += `🌟 ¡Pero no se preocupe! Podemos gestionar un **pedido especial** para usted. Las llantas por pedido tardan aproximadamente 1 día hábil en llegar\n\n`;
+      description += `📞 Para coordinar su pedido especial, contacte a nuestro equipo de servicio al cliente:\n`;
+      description += `**55 2637 3003**\n\n`;
+      description += `💡 También puedo ayudarle con:\n`;
+      description += `• 🔍 Verificar juntos las especificaciones de la llanta\n`;
+      description += `• 🛞 Buscar con otras medidas alternativas\n`;
+      description += `En Llantasyservicios.mx estamos comprometidos a encontrar la solución perfecta para su vehículo.`;
     }
 
     // Return unified format
