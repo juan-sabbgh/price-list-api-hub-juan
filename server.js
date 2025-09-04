@@ -934,10 +934,10 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       idEmpG: MAGNO_ID_EMP,
       idSuc: "1628",
       descontinuado: true,
-      textoFind: `${width} ${finalAspectRatio} ${finalRimDiameter.toString().replaceAll("R", "")} ${brand || ""}`
+      textoFind: `${width} ${finalAspectRatio ? finalAspectRatio : ""} ${finalRimDiameter.toString().replaceAll("R", "")} ${brand || ""}`
     };
     console.log(
-      `${width} ${finalAspectRatio} ${finalRimDiameter.toString().replaceAll("R", "")} ${brand || ""}`
+      `${width} ${finalAspectRatio ? finalAspectRatio : ""} ${finalRimDiameter.toString().replaceAll("R", "")} ${brand || ""}`
     );
 
 
@@ -970,7 +970,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
 
     // Construir prefijo de búsqueda (ejemplo: 205 55 14 ó 205 55 R14)
     const regex = new RegExp(
-      `^${width}\\s+${finalAspectRatio}\\s+(R?${finalRimDiameter.replace("R", "")})`,
+      `^${width}(?:\\s+${finalAspectRatio})?\\s+(R?${finalRimDiameter.replace("R", "")})`,
       "i"
     );
 
