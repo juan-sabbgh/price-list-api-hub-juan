@@ -854,8 +854,17 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
     } = req.body;
 
     // Parameter mapping processing
-    const finalAspectRatio = aspect_ratio || aspectRatio;
+    let finalAspectRatio = aspect_ratio || aspectRatio;
     const finalRimDiameter = rim_diameter || diameter;
+
+    // Se establece finalAspectRatio a 70 solo si se cumplen TODAS las condiciones
+    if (
+      (width == '205' || width == '255') &&
+      finalRimDiameter === '18' &&
+      finalAspectRatio == null // Esta condición verifica que aspectRatio sea null o undefined
+    ) {
+      finalAspectRatio = 70;
+    }
 
     // Parameter validation
     if (!width) {
