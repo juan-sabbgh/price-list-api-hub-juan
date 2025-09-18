@@ -860,7 +860,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
     // Se establece finalAspectRatio a 70 solo si se cumplen TODAS las condiciones
     if (
       (width == '205' || width == '255') &&
-      finalRimDiameter === '18' &&
+      finalRimDiameter == '18' &&
       finalAspectRatio == null // Esta condición verifica que aspectRatio sea null o undefined
     ) {
       finalAspectRatio = 70;
