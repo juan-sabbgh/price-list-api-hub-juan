@@ -1055,11 +1055,11 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
     if (matchingTires.length > 0) {
       const formattedFirstTire = formatProductPrices(matchingTires[0]);
       const formattedLastTire = formatProductPrices(matchingTires[matchingTires.length - 1]);
-      description += `💰 Rango de precios: $${formattedFirstTire['precioNeto']} - $${formattedLastTire['precioNeto']}\n\n`;
+      description += `💰 Rango de precios: $${formattedFirstTire['precioNeto'].toFixed(0)} - $${formattedLastTire['precioNeto'].toFixed(0)}\n\n`;
       description += `🎯 Sus opciones de neumáticos:\n`;
       matchingTires.forEach((tire, index) => {
         const formattedTire = formatProductPrices(tire);
-        description += `${index + 1}. ${formattedTire['descripcion']} - *$${formattedTire['precioNeto']}* (Disponible: ${formattedTire['existencia']})\n`;
+        description += `${index + 1}. ${formattedTire['descripcion']} - *$${formattedTire['precioNeto'].toFixed(0)}* (Disponible: ${formattedTire['existencia']})\n\n`;
       });
       description += `\n💎 Nuestro precio ya incluye:\n`;
       description += `✅ Instalación profesional\n`;
