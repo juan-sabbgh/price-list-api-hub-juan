@@ -1071,7 +1071,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
         description += `${index + 1}. ${formattedTire['descripcion']} - *$${formattedTire['precioNeto'].toFixed(0)}* (Disponible: ${formattedTire['existencia']})\n\n`;
       });
 
-      description += `\n🎁 **¡PROMOCIÓN ESPECIAL!**\n`;
+      description += `\n🎁 *¡PROMOCIÓN ESPECIAL!*\n`;
       description += `Mencione el código de promoción *DYNA25* al visitarnos y llévese un termo o lonchera ¡GRATIS! en la compra de sus llantas.\n\n`;
 
       description += `\n💎 Nuestro precio ya incluye:\n`;
