@@ -1076,6 +1076,8 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       description += `✅ Balanceo por computadora\n`;
       description += `✅ Inflado con nitrógeno + garantía 12 meses\n`;
       description += `✅ Rotación gratis a partir de 2 llantas\n`;
+      description += `\n🎁 **¡PROMOCIÓN ESPECIAL!**\n`;
+      description += `Mencione el código de promoción *DYNA25* al visitarnos y llévese un termo o lonchera ¡GRATIS! en la compra de sus llantas.\n\n`;
 
       description += `\n📍 Le invitamos a visitarnos en nuestra sucursal:\n`;
       description += `Calz de las Armas 591, Col Providencia, Azcapotzalco CDMX, CP 02440\n`;
