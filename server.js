@@ -1054,18 +1054,18 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
     }
 
     // Description information (Spanish) - Version C: Warm Service Style
-    let description = `🔍 Búsqueda completada para neumáticos de ${tireType} - Medida: ${searchSpec}\n\n`;
-    description += `📋 Información de su búsqueda:\n`;
-    description += `• ✅ Neumáticos encontrados: ${matchingTires.length}\n`;
-    description += `• 👁️ Resultados mostrados: ${Math.min(matchingTires.length, resultLimit)}\n`;
-    description += `• 🚗 Tipo: ${tireType}\n`;
-    description += `• 📏 Especificación: ${searchSpec}\n\n`;
+    let description = `🔍 Búsqueda completada para llantas - Medida: ${searchSpec}\n\n`;
+    //description += `📋 Información de su búsqueda:\n`;
+    //description += `• ✅ Neumáticos encontrados: ${matchingTires.length}\n`;
+    //description += `• 👁️ Resultados mostrados: ${Math.min(matchingTires.length, resultLimit)}\n`;
+    //description += `• 🚗 Tipo: ${tireType}\n`;
+    //description += `• 📏 Especificación: ${searchSpec}\n\n`;
 
     if (matchingTires.length > 0) {
       const formattedFirstTire = formatProductPrices(matchingTires[0]);
       const formattedLastTire = formatProductPrices(matchingTires[matchingTires.length - 1]);
-      description += `💰 Rango de precios: $${formattedFirstTire['precioNeto'].toFixed(0)} - $${formattedLastTire['precioNeto'].toFixed(0)}\n\n`;
-      description += `🎯 Sus opciones de neumáticos:\n`;
+      //description += `💰 Rango de precios: $${formattedFirstTire['precioNeto'].toFixed(0)} - $${formattedLastTire['precioNeto'].toFixed(0)}\n\n`;
+      description += `🎯 Sus opciones de llantas:\n`;
       matchingTires.forEach((tire, index) => {
         const formattedTire = formatProductPrices(tire);
         description += `${index + 1}. ${formattedTire['descripcion']} - *$${formattedTire['precioNeto'].toFixed(0)}* (Disponible: ${formattedTire['existencia']})\n\n`;
@@ -1081,11 +1081,11 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       description += `✅ Inflado con nitrógeno + garantía 12 meses\n`;
       description += `✅ Rotación gratis a partir de 2 llantas\n`;
 
-      description += `\n📍 Le invitamos a visitarnos en nuestra sucursal:\n`;
-      description += `Calz de las Armas 591, Col Providencia, Azcapotzalco CDMX, CP 02440\n`;
-      description += `📞 Tel: 55 2637 3003\n`;
+      //description += `\n📍 Le invitamos a visitarnos en nuestra sucursal:\n`;
+      //description += `Calz de las Armas 591, Col Providencia, Azcapotzalco CDMX, CP 02440\n`;
+      //description += `📞 Tel: 55 2637 3003\n`;
       //description += "https://maps.app.goo.gl/uuYei436nN8pHw34A?g_st=ic"
-      description += `\n🕐 Horarios: Lunes-Viernes 9:00-18:00 • Sábados 9:00-15:00\n`;
+      //description += `\n🕐 Horarios: Lunes-Viernes 9:00-18:00 • Sábados 9:00-15:00\n`;
       description += `\n📦 **Importante:** Le recomendamos confirmar el stock antes de su visita, ya que nuestro inventario se mueve constantemente.\n`;
       //description += `\n🤝 Presentando esta cotización en sucursal, con gusto podemos ofrecerle un **descuento adicional**.\n`;
       description += `¿Le gustaría que le agende una cita para la instalación de sus llantas, o prefiere visitarnos directamente en el horario que le acomode?`;
@@ -1096,8 +1096,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       description += `*55 2637 3003*\n\n`;
       description += `💡 También puedo ayudarle con:\n`;
       description += `• 🔍 Verificar juntos las especificaciones de la llanta\n`;
-      description += `• 🛞 Buscar con otras medidas alternativas\n`;
-      description += `En Llantasyservicios.mx estamos comprometidos a encontrar la solución perfecta para su vehículo.`;
+      description += `• 🛞 Buscar con otras medidas alternativas`;
     }
 
     // Return unified format
