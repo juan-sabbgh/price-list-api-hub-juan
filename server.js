@@ -1054,7 +1054,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
     }
 
     // Description information (Spanish) - Version C: Warm Service Style
-    let description = `🔍 Búsqueda completada para llantas - Medida: ${searchSpec}\n\n`;
+    //let description = `🔍 Búsqueda completada para llantas - Medida: ${searchSpec}\n\n`;
     //description += `📋 Información de su búsqueda:\n`;
     //description += `• ✅ Neumáticos encontrados: ${matchingTires.length}\n`;
     //description += `• 👁️ Resultados mostrados: ${Math.min(matchingTires.length, resultLimit)}\n`;
@@ -1065,7 +1065,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       const formattedFirstTire = formatProductPrices(matchingTires[0]);
       const formattedLastTire = formatProductPrices(matchingTires[matchingTires.length - 1]);
       //description += `💰 Rango de precios: $${formattedFirstTire['precioNeto'].toFixed(0)} - $${formattedLastTire['precioNeto'].toFixed(0)}\n\n`;
-      description += `🎯 Sus opciones de llantas:\n`;
+      description += `*Llantas ${searchSpec}:*\n`;
       matchingTires.forEach((tire, index) => {
         const formattedTire = formatProductPrices(tire);
         description += `${index + 1}. ${formattedTire['descripcion']} - *$${formattedTire['precioNeto'].toFixed(0)}* (Disponible: ${formattedTire['existencia']})\n\n`;
