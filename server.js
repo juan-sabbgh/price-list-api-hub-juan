@@ -1054,7 +1054,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
     }
 
     // Description information (Spanish) - Version C: Warm Service Style
-    let descripcion;
+    let description;
     //let description = `🔍 Búsqueda completada para llantas - Medida: ${searchSpec}\n\n`;
     //description += `📋 Información de su búsqueda:\n`;
     //description += `• ✅ Neumáticos encontrados: ${matchingTires.length}\n`;
