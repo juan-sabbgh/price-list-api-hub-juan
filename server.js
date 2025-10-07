@@ -84,6 +84,45 @@ async function agregarFila(valores) {
   return true
 }
 
+async function obtenerNumeroFilasDemo() {
+  try {
+    const spreadsheetId = "1d2q5Uu8mIzg7PGqa-UkK9on6kkWP-TDKnNQ9k8y6K38"
+    const sheetName = 'Hoja 1'
+    const client = await auth.getClient();
+    const sheets = google.sheets({ version: "v4", auth: client });
+
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${sheetName}`,
+    });
+
+    const filas = response.data.values || [];
+    return filas.length;
+
+  } catch (error) {
+    console.error('Error al obtener número de filas:', error);
+    throw error;
+  }
+}
+
+async function agregarFilaDemo(valores) {
+  const client = await auth.getClient();
+  const sheets = google.sheets({ version: "v4", auth: client });
+
+  const res = await sheets.spreadsheets.values.append({
+    spreadsheetId: "1d2q5Uu8mIzg7PGqa-UkK9on6kkWP-TDKnNQ9k8y6K38",        // ID de la hoja
+    range: "Hoja 1!A:G",        // Rango (en qué columnas insertar)
+    valueInputOption: "USER_ENTERED", // Usa USER_ENTERED para que respete formatos de Google Sheets
+    insertDataOption: "INSERT_ROWS",  // Inserta nuevas filas
+    requestBody: {
+      values: [valores], // 👈 recibe un array con los datos de la fila
+    },
+  });
+
+  //console.log("Fila añadida:", res.data.updates);
+  return true
+}
+
 //leerHoja();
 
 //testing google api
@@ -1148,6 +1187,130 @@ app.post('/api/appointment/create', async (req, res) => {
     ]
 
     const response_add_row = await agregarFila(row_data)
+
+    if (response_add_row) {
+      const rawData = {
+        "estado_reservacion": "Generada exitosamente",
+        "codigo_reservacion": appointment_code,
+        "datos_reserva": {
+          "nombre": nombre,
+          "servicio": servicio ? servicio : "",
+          "llanta": llanta ? llanta : "",
+          "fecha": fecha ? fecha : "",
+          "hora": hora ? hora : ""
+        }
+      }
+
+      let description = `📅 ¡Su reservación ha sido generada exitosamente!\n\n`;
+      description += `🔑 Código de reservación: **${appointment_code}**\n\n`;
+      description += `📋 Detalles de su reservación:\n`;
+      description += `• 👤 Nombre: ${nombre}\n`;
+      description += `• 🔧 Servicio: ${servicio ? servicio : "N/A"}\n`;
+      description += `• 🛞 Llanta: ${llanta ? llanta : "N/A"}\n`;
+      description += `• 📆 Fecha: ${fecha ? fecha : "N/A"}\n`;
+      description += `• ⏰ Hora: ${hora ? hora : "N/A"}\n\n`;
+      description += `🤝 Le esperamos en nuestra sucursal:\n`;
+      description += `📍 Calz de las Armas 591, Col. Providencia, Azcapotzalco CDMX, CP 02440\n`;
+      description += `📞 Tel: 55 2637 3003\n`;
+      description += `🕐 Horarios: Lunes-Viernes 9:00-18:00 • Sábados 9:00-15:00\n\n`;
+
+      const markdownTable = "| Se agendó la reservación con exito |\n"
+      // Return unified format
+
+      res.json({
+        raw: rawData,
+        markdown: markdownTable,
+        type: "markdown",
+        desc: description
+      });
+    }
+
+    else {
+      const rawData = {
+        "estado_reservacion": "No se pudo generar",
+        "codigo_reservacion": appointment_code,
+        "datos_reserva": {
+          "nombre": nombre,
+          "servicio": servicio ? servicio : "",
+          "llanta": llanta ? llanta : "",
+          "fecha": fecha ? fecha : "",
+          "hora": hora ? hora : ""
+        }
+      }
+
+      let description = `⚠️ Lamentamos informarle que **no se pudo generar su reservación en este momento**.\n\n`;
+      description += `🔑 Código de intento: **${appointment_code}**\n\n`;
+      description += `📋 Detalles que intentó registrar:\n`;
+      description += `• 👤 Nombre: ${nombre}\n`;
+      description += `• 🔧 Servicio: ${servicio ? servicio : "N/A"}\n`;
+      description += `• 🛞 Llanta: ${llanta ? llanta : "N/A"}\n`;
+      description += `• 📆 Fecha: ${fecha ? fecha : "N/A"}\n`;
+      description += `• ⏰ Hora: ${hora ? hora : "N/A"}\n\n`;
+      description += `🙏 Por favor, intente nuevamente en unos minutos o comuníquese con nosotros para apoyo directo.\n\n`;
+      description += `📍 Grupo Magno – Calz de las Armas 591, Col. Providencia, Azcapotzalco CDMX, CP 02440\n`;
+      description += `📞 Tel: 55 2637 3003\n`;
+      description += `🕐 Horarios: Lunes-Viernes 9:00-18:00 • Sábados 9:00-15:00`;
+
+      const markdownTable = "| ❌ No se pudo agendar la reservación |\n";
+
+      res.json({
+        raw: rawData,
+        markdown: markdownTable,
+        type: "markdown",
+        desc: description
+      });
+    }
+
+
+
+
+
+
+  } catch (error) {
+    console.error('Appointment creation error', error);
+    res.status(500).json({
+      success: false,
+      error: 'Ocurrió un error al crear la reservacion'
+    });
+  }
+});
+
+// Tire specification search API - Spanish version
+app.post('/api/appointment/create-demo', async (req, res) => {
+  try {
+    // Support two parameter formats for compatibility
+    const {
+      llanta,
+      servicio,
+      nombre,
+      numero_contacto,
+      fecha,
+      hora
+    } = req.body;
+
+    // check if data is passed correctly
+    console.log("llanta: ", llanta)
+    console.log("nombre: ", nombre)
+    console.log("numero_contacto: ", numero_contacto)
+    console.log("fecha: ", fecha)
+    console.log("hora: ", hora)
+
+    //create appointment code
+    //const appointment_code = Math.floor(100000 + Math.random() * 900000);
+    const num_registros = await obtenerNumeroFilasDemo();
+    const appointment_code = `CRDYNA${num_registros}`
+    //create new row in sheets
+    const row_data = [
+      appointment_code,
+      nombre,
+      numero_contacto ? numero_contacto : "",
+      llanta ? llanta : "",
+      servicio ? servicio : "",
+      fecha ? fecha : "",
+      hora ? hora : ""
+    ]
+
+    const response_add_row = await agregarFilaDemo(row_data)
 
     if (response_add_row) {
       const rawData = {
