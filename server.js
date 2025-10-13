@@ -84,6 +84,27 @@ async function agregarFila(valores) {
   return true
 }
 
+async function agregarFilaLlantas(especificaciones) {
+  const client = await auth.getClient();
+  const sheets = google.sheets({ version: "v4", auth: client });
+
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString();
+
+  const res = await sheets.spreadsheets.values.append({
+    spreadsheetId: SHEET_ID,        // ID de la hoja
+    range: "Llantas no encontradas 1!A:B",        // Rango (en qué columnas insertar)
+    valueInputOption: "USER_ENTERED", // Usa USER_ENTERED para que respete formatos de Google Sheets
+    insertDataOption: "INSERT_ROWS",  // Inserta nuevas filas
+    requestBody: {
+      values: [especificaciones, formattedDate], // 👈 recibe un array con los datos de la fila
+    },
+  });
+
+  //console.log("Fila añadida:", res.data.updates);
+  return true
+}
+
 async function obtenerNumeroFilasDemo() {
   try {
     const spreadsheetId = "1d2q5Uu8mIzg7PGqa-UkK9on6kkWP-TDKnNQ9k8y6K38"
@@ -879,6 +900,280 @@ app.post('/api/price-list/tire-search', (req, res) => {
 
 // Tire specification search API - Spanish version
 app.post('/api/price-list/tire-search-es', async (req, res) => {
+  try {
+    // Support two parameter formats for compatibility
+    const {
+      width,
+      aspect_ratio,
+      aspectRatio,
+      rim_diameter,
+      diameter,
+      exact_match = false,
+      brand,
+      limit = 10  // New: user can specify return count, default 10
+    } = req.body;
+
+    // Parameter mapping processing
+    let finalAspectRatio = aspect_ratio || aspectRatio;
+    const finalRimDiameter = rim_diameter || diameter;
+
+    // Se establece finalAspectRatio a 70 solo si se cumplen TODAS las condiciones
+    if (
+      (width == '205' || width == '255') &&
+      finalRimDiameter == '18' &&
+      finalAspectRatio == null // Esta condición verifica que aspectRatio sea null o undefined
+    ) {
+      finalAspectRatio = 70;
+    }
+
+    // Parameter validation
+    if (!width) {
+      return res.status(400).json({
+        success: false,
+        error: 'El ancho del neumático (width) es un parámetro requerido',
+        usage: {
+          car: 'Neumático de auto: { "width": 155, "aspect_ratio": 70, "rim_diameter": 13, "limit": 20 }',
+          truck: 'Neumático de camión: { "width": 1100, "rim_diameter": 22, "limit": 20 }'
+        },
+        parameters: {
+          width: 'Requerido - Ancho del neumático',
+          aspect_ratio: 'Opcional - Relación de aspecto (neumático de auto)',
+          rim_diameter: 'Opcional - Diámetro',
+          exact_match: 'Opcional - Si hacer coincidencia exacta (predeterminado false)',
+          limit: 'Opcional - Cantidad de resultados (1-100, predeterminado 10)'
+        },
+        examples: {
+          car_search: {
+            width: 155,
+            aspect_ratio: 70,
+            rim_diameter: 13,
+            limit: 20
+          },
+          truck_search: {
+            width: 1100,
+            rim_diameter: 22,
+            limit: 50
+          },
+          show_all: {
+            width: 185,
+            aspect_ratio: 55,
+            rim_diameter: 15,
+            limit: 100
+          }
+        }
+      });
+    }
+
+    // Determine search type
+    const searchType = finalAspectRatio ? 'car' : 'truck';
+
+    console.log(`🔍 Tire specification search (ES): ${searchType} - width:${width}, aspect ratio:${finalAspectRatio || 'N/A'}, diameter:${finalRimDiameter || 'N/A'}`);
+
+    // Parse tire specifications for all products
+    // const tireProducts = priceListData.map(product => {
+    //   const specs = parseTireSpecification(product['Producto']);
+    //   return {
+    //     ...product,
+    //     tire_specs: specs
+    //   };
+    // }).filter(product => product.tire_specs.width !== null); // Only keep products with parseable specs
+
+    // console.log(`📊 Successfully parsed ${tireProducts.length} tire products (ES)`);
+
+    // Search for matching tires Juan
+    const url = MAGNO_SEARCH_URL;
+
+    const headers = {
+      "accept": "*/*",
+      "accept-language": "es,es-ES;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+      "content-type": "application/json; text/plain",
+      "origin": "https://grupomagno.admovil.net",
+      "priority": "u=1, i",
+      "referer": "https://grupomagno.admovil.net/",
+      "sec-ch-ua": `"Not;A=Brand";v="99", "Microsoft Edge";v="139", "Chromium";v="139"`,
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": `"Windows"`,
+      "sec-fetch-dest": "empty",
+      "sec-fetch-mode": "cors",
+      "sec-fetch-site": "same-site",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0"
+    };
+
+    const payload = {
+      idEmpG: MAGNO_ID_EMP,
+      idSuc: "1628",
+      descontinuado: true,
+      textoFind: `${width} ${finalAspectRatio ? finalAspectRatio : ""} ${finalRimDiameter.toString().replaceAll("R", "")} ${brand || ""}`
+    };
+    console.log(
+      `${width} ${finalAspectRatio ? finalAspectRatio : ""} ${finalRimDiameter.toString().replaceAll("R", "")} ${brand || ""}`
+    );
+
+
+    //console.log("Datos enviados a la api de magno", payload)
+
+    async function fetchData() {
+      try {
+        const response = await fetch(url, {
+          method: "POST",
+          headers: headers,
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        //console.log("Respuesta:", data);
+
+        return data;
+      } catch (error) {
+        console.error("Ocurrió un error:", error);
+        return []
+      }
+    }
+
+    let matchingTires = await fetchData()
+
+    // Construir prefijo de búsqueda (ejemplo: 205 55 14 ó 205 55 R14)
+    const regex = new RegExp(
+      `^${width}(?:\\s+${finalAspectRatio})?\\s+(R?${finalRimDiameter.replace("R", "")})`,
+      "i"
+    );
+
+    // Filter only available tires
+    matchingTires = matchingTires.filter(p =>
+      p.existencia && p.existencia > 0 && regex.test(p.descripcion)
+    );
+    //console.log("Respuesta:", matchingTires);
+    // Sort by price
+    matchingTires.sort((a, b) => {
+      const priceA = formatPrice(a['precioNeto']);
+      const priceB = formatPrice(b['precioNeto']);
+      return priceA - priceB;
+    });
+
+    // Format results as unified Agent response format
+    const tireType = searchType === 'car' ? 'Auto' : 'Camión';
+    const searchSpec = searchType === 'car'
+      ? `${width}/${finalAspectRatio}R${finalRimDiameter}`
+      : `${width}R${finalRimDiameter}`;
+
+    // Apply user-specified result count limit
+    const resultLimit = Math.min(Math.max(parseInt(limit) || 10, 1), 100); // 1-100 range, default 10
+
+    // Raw data
+    const rawData = {
+      searchType: searchType,
+      searchSpec: searchSpec,
+      totalFound: matchingTires.length,
+      results: matchingTires.slice(0, resultLimit).map(tire => {
+        const formattedTire = formatProductPrices(tire);
+        return {
+          id: formattedTire['clave'],
+          product: formattedTire['descripcion'],
+          stock: formattedTire['existencia'],
+          price: formattedTire['precioNeto'],
+          specs: {
+            width: width,
+            aspect_ratio: finalAspectRatio,
+            rim_diameter: finalRimDiameter,
+            type: "car",
+            original: formattedTire['descripcion']
+          }
+        };
+      }),
+      searchParams: {
+        width: width,
+        aspectRatio: finalAspectRatio || null,
+        diameter: finalRimDiameter || null,
+        type: searchType,
+        exactMatch: exact_match,
+        limit: resultLimit
+      },
+      statistics: {
+        totalTireProducts: matchingTires.length,
+        carTires: matchingTires.length,
+        //truckTires: matchingTires.filter(p => p.tire_specs.type === 'truck').length
+      }
+    };
+    //console.log(rawData)
+
+    // Markdown table format (Spanish)
+    let markdownTable = "| # | Nombre del Producto | Stock | Precio |\n|:------------|:--------------------|:------|:-------|\n";
+    if (matchingTires.length > 0) {
+      // Use user-specified result count limit
+      matchingTires.slice(0, resultLimit).forEach((tire, index) => {
+        const formattedTire = formatProductPrices(tire);
+        markdownTable += `| ${index + 1} | ${formattedTire['descripcion']} | ${formattedTire['existencia']} | $${formattedTire['precioNeto']} |\n`;
+      });
+    } else {
+      markdownTable += "| - | No se encontraron neumáticos | - | - |\n";
+    }
+
+    // Description information (Spanish) - Version C: Warm Service Style
+    let description = ``;
+    //let description = `🔍 Búsqueda completada para llantas - Medida: ${searchSpec}\n\n`;
+    //description += `📋 Información de su búsqueda:\n`;
+    //description += `• ✅ Neumáticos encontrados: ${matchingTires.length}\n`;
+    //description += `• 👁️ Resultados mostrados: ${Math.min(matchingTires.length, resultLimit)}\n`;
+    //description += `• 🚗 Tipo: ${tireType}\n`;
+    //description += `• 📏 Especificación: ${searchSpec}\n\n`;
+
+    if (matchingTires.length > 0) {
+      const formattedFirstTire = formatProductPrices(matchingTires[0]);
+      const formattedLastTire = formatProductPrices(matchingTires[matchingTires.length - 1]);
+      //description += `💰 Rango de precios: $${formattedFirstTire['precioNeto'].toFixed(0)} - $${formattedLastTire['precioNeto'].toFixed(0)}\n\n`;
+      description += `*Llantas ${searchSpec}:*\n`;
+      matchingTires.forEach((tire, index) => {
+        const formattedTire = formatProductPrices(tire);
+        description += `${index + 1}. ${formattedTire['descripcion']} - *$${formattedTire['precioNeto'].toFixed(0)}* (Disponible: ${formattedTire['existencia']})\n\n`;
+      });
+
+      description += `🎁 *¡PROMOCIÓN ESPECIAL!*\n`;
+      description += `Mencione el código de promoción *DYNA25* al visitarnos y llévese un termo o lonchera ¡GRATIS! en la compra de sus llantas.\n\n`;
+
+      description += `✅ *Incluye*: Instalación profesional, válvula nueva, balanceo por computadora, inflado con nitrógeno, garantía de 12 meses rotación gratis a partir de 2 llantas\n`;
+      
+      //description += `\n📍 Le invitamos a visitarnos en nuestra sucursal:\n`;
+      //description += `Calz de las Armas 591, Col Providencia, Azcapotzalco CDMX, CP 02440\n`;
+      //description += `📞 Tel: 55 2637 3003\n`;
+      //description += "https://maps.app.goo.gl/uuYei436nN8pHw34A?g_st=ic"
+      //description += `\n🕐 Horarios: Lunes-Viernes 9:00-18:00 • Sábados 9:00-15:00\n`;
+      description += `\n📦 *Importante:* Le recomendamos confirmar el stock antes de su visita, ya que nuestro inventario se mueve constantemente.\n\n`;
+      //description += `\n🤝 Presentando esta cotización en sucursal, con gusto podemos ofrecerle un **descuento adicional**.\n`;
+      description += `¿Le gustaría que le agende una cita para la instalación de sus llantas, o prefiere visitarnos directamente en el horario que le acomode?`;
+    } else {
+      await agregarFilaLlantas(searchSpec);
+      description += `❌ Lamentamos informarle que no encontramos llantas ${searchSpec} en nuestro inventario actual\n\n`;
+      description += `🌟 ¡Pero no se preocupe! Podemos gestionar un *pedido especial* para usted. Las llantas por pedido tardan aproximadamente 1 día hábil en llegar\n\n`;
+      description += `📞 Para coordinar su pedido especial, contacte a nuestro equipo de servicio al cliente:\n`;
+      description += `*55 2637 3003*\n\n`;
+      description += `💡 También puedo ayudarle con:\n`;
+      description += `• 🔍 Verificar juntos las especificaciones de la llanta\n`;
+      description += `• 🛞 Buscar con otras medidas alternativas`;
+    }
+
+    // Return unified format
+    res.json({
+      raw: rawData,
+      markdown: markdownTable,
+      type: "markdown",
+      desc: description
+    });
+
+  } catch (error) {
+    console.error('Tire search error (ES):', error);
+    res.status(500).json({
+      success: false,
+      error: 'Ocurrió un error durante la búsqueda de neumáticos'
+    });
+  }
+});
+
+app.post('/api/price-list/tire-search-es-demo', async (req, res) => {
   try {
     // Support two parameter formats for compatibility
     const {
