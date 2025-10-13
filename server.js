@@ -97,7 +97,7 @@ async function agregarFilaLlantas(especificaciones) {
     valueInputOption: "USER_ENTERED", // Usa USER_ENTERED para que respete formatos de Google Sheets
     insertDataOption: "INSERT_ROWS",  // Inserta nuevas filas
     requestBody: {
-      values: [especificaciones, formattedDate], // 👈 recibe un array con los datos de la fila
+      values: [[especificaciones, formattedDate]], // 👈 recibe un array con los datos de la fila
     },
   });
 
