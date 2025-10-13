@@ -93,7 +93,7 @@ async function agregarFilaLlantas(especificaciones) {
 
   const res = await sheets.spreadsheets.values.append({
     spreadsheetId: SHEET_ID,        // ID de la hoja
-    range: "Llantas no encontradas 1!A:B",        // Rango (en qué columnas insertar)
+    range: "Llantas no encontradas!A:B",        // Rango (en qué columnas insertar)
     valueInputOption: "USER_ENTERED", // Usa USER_ENTERED para que respete formatos de Google Sheets
     insertDataOption: "INSERT_ROWS",  // Inserta nuevas filas
     requestBody: {
