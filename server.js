@@ -1142,7 +1142,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       //description += `📞 Tel: 55 2637 3003\n`;
       //description += "https://maps.app.goo.gl/uuYei436nN8pHw34A?g_st=ic"
       //description += `\n🕐 Horarios: Lunes-Viernes 9:00-18:00 • Sábados 9:00-15:00\n`;
-      description += `\n📦 *Importante:* Le recomendamos confirmar el stock antes de su visita, ya que nuestro inventario se mueve constantemente.\n\n`;
+      description += `\n📦 *Importante:* Le recomendamos confirmar el stock antes de su visita, ya que nuestro inventario se mueve constantemente.\n`;
       //description += `\n🤝 Presentando esta cotización en sucursal, con gusto podemos ofrecerle un **descuento adicional**.\n`;
       description += `¿Le gustaría que le agende una cita para la instalación de sus llantas, o prefiere visitarnos directamente en el horario que le acomode?`;
     } else {
@@ -1150,10 +1150,10 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       description += `❌ Lamentamos informarle que no encontramos llantas ${searchSpec} en nuestro inventario actual\n\n`;
       description += `🌟 ¡Pero no se preocupe! Podemos gestionar un *pedido especial* para usted. Las llantas por pedido tardan aproximadamente 1 día hábil en llegar\n\n`;
       description += `📞 Para coordinar su pedido especial, contacte a nuestro equipo de servicio al cliente:\n`;
-      description += `*55 2637 3003*\n\n`;
-      description += `💡 También puedo ayudarle con:\n`;
-      description += `• 🔍 Verificar juntos las especificaciones de la llanta\n`;
-      description += `• 🛞 Buscar con otras medidas alternativas`;
+      description += `*55 2637 3003*`;
+      //description += `💡 También puedo ayudarle con:\n`;
+      //description += `• 🔍 Verificar juntos las especificaciones de la llanta\n`;
+      //description += `• 🛞 Buscar con otras medidas alternativas`;
     }
 
     // Return unified format
