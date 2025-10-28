@@ -998,15 +998,15 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       "sec-fetch-site": "same-site",
       "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0"
     };
-
+    const textFind = `${width} ${finalAspectRatio ? finalAspectRatio : ""} ${finalRimDiameter.toString().replaceAll("R", "")} ${brand || ""}`
     const payload = {
       idEmpG: MAGNO_ID_EMP,
       idSuc: "1628",
       descontinuado: true,
-      textoFind: `${width} ${finalAspectRatio ? finalAspectRatio : ""} ${finalRimDiameter.toString().replaceAll("R", "")} ${brand || ""}`
+      textoFind: textFind
     };
     console.log(
-      `${width} ${finalAspectRatio ? finalAspectRatio : ""} ${finalRimDiameter.toString().replaceAll("R", "")} ${brand || ""}`
+      textFind
     );
 
 
@@ -1146,8 +1146,8 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       //description += `\n🤝 Presentando esta cotización en sucursal, con gusto podemos ofrecerle un **descuento adicional**.\n`;
       description += `¿Le gustaría que le agende una cita para la instalación de sus llantas, o prefiere visitarnos directamente en el horario que le acomode?`;
     } else {
-      await agregarFilaLlantas(searchSpec);
-      description += `❌ Lamentamos informarle que no encontramos llantas ${searchSpec} en nuestro inventario actual\n\n`;
+      await agregarFilaLlantas(textFind);
+      description += `❌ Lamentamos informarle que no encontramos llantas ${textFind} en nuestro inventario actual\n\n`;
       description += `🌟 ¡Pero no se preocupe! Podemos gestionar un *pedido especial* para usted. Las llantas por pedido tardan aproximadamente 1 día hábil en llegar\n\n`;
       description += `📞 Para coordinar su pedido especial, contacte a nuestro equipo de servicio al cliente:\n`;
       description += `*55 2637 3003*`;
