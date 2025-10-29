@@ -1037,9 +1037,9 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
 
     let matchingTires = await fetchData()
 
-    // Construir prefijo de búsqueda (ejemplo: 205 55 14 ó 205 55 R14)
+    // Construir prefijo de búsqueda (ejemplo: 205 55 14, 205 55 R14, 205/45R17, 205/45RF17)
     const regex = new RegExp(
-      `^${width}(?:\\s+${finalAspectRatio})?\\s+(R?${finalRimDiameter.replace("R", "")})`,
+      `^${width}(?:(?:\\s+${finalAspectRatio})?\\s+(R?${finalRimDiameter.replace("R", "")})|\\/${finalAspectRatio}\\s*R(F?)\\s*${finalRimDiameter.replace("R", "")})`,
       "i"
     );
 
@@ -1136,7 +1136,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       description += `Mencione el código de promoción *DYNA25* al visitarnos y llévese un termo o lonchera ¡GRATIS! en la compra de sus llantas.\n\n`;
 
       description += `✅ *Incluye*: Instalación profesional, válvula nueva, balanceo por computadora, inflado con nitrógeno, garantía de 12 meses rotación gratis a partir de 2 llantas\n`;
-      
+
       //description += `\n📍 Le invitamos a visitarnos en nuestra sucursal:\n`;
       //description += `Calz de las Armas 591, Col Providencia, Azcapotzalco CDMX, CP 02440\n`;
       //description += `📞 Tel: 55 2637 3003\n`;
@@ -1410,7 +1410,7 @@ app.post('/api/price-list/tire-search-es-demo', async (req, res) => {
       description += `Mencione el código de promoción *DYNA25* al visitarnos y llévese un termo o lonchera ¡GRATIS! en la compra de sus llantas.\n\n`;
 
       description += `✅ *Incluye*: Instalación profesional, válvula nueva, balanceo por computadora, inflado con nitrógeno, garantía de 12 meses rotación gratis a partir de 2 llantas\n`;
-      
+
       //description += `\n📍 Le invitamos a visitarnos en nuestra sucursal:\n`;
       //description += `Calz de las Armas 591, Col Providencia, Azcapotzalco CDMX, CP 02440\n`;
       //description += `📞 Tel: 55 2637 3003\n`;
