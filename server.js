@@ -909,10 +909,9 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       rim_diameter,
       diameter,
       exact_match = false,
-      brand,
       limit = 10  // New: user can specify return count, default 10
     } = req.body;
-
+    const brand = ""
     // Parameter mapping processing
     let finalAspectRatio = aspect_ratio || aspectRatio;
     const finalRimDiameter = rim_diameter || diameter;
@@ -1039,7 +1038,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
 
     // Construir prefijo de búsqueda (ejemplo: 205 55 14, 205 55 R14, 205/45R17, 205/45RF17)
     const regex = new RegExp(
-      `^${width}(?:(?:\\s+${finalAspectRatio})?\\s+(R?${finalRimDiameter.replace("R", "")})|\\/${finalAspectRatio}\\s*R(F?)\\s*${finalRimDiameter.replace("R", "")})`,
+      `^${width}(?:(?:\\s+${finalAspectRatio})?\\s+(R?${finalRimDiameter.replace("R", "")})|\\/${finalAspectRatio}\\s*(Z?)R(F?)\\s*${finalRimDiameter.replace("R", "")})`,
       "i"
     );
 
