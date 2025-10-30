@@ -1038,7 +1038,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
 
     // Construir prefijo de búsqueda (ejemplo: 205 55 14, 205 55 R14, 205/45R17, 205/45RF17)
     const regex = new RegExp(
-      `^${width}(?:(?:\\s+${finalAspectRatio})?\\s+(R?${finalRimDiameter.replace("R", "")})|\\/${finalAspectRatio}\\s*(Z?)R(F?)\\s*${finalRimDiameter.replace("R", "")})`,
+      `^${width}(?:(?:\\s+${finalAspectRatio})?\\s+(R?${finalRimDiameter.replace("R", "")})|\\/${finalAspectRatio}\\s*Z?R(F?)\\s*${finalRimDiameter.replace("R", "")})`,
       "i"
     );
 
