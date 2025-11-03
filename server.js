@@ -1394,7 +1394,7 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
           id: formattedTire['clave'],
           product: formattedTire['producto'],
           stock: formattedTire['existencia'],
-          price: formattedTire['precioNeto'],
+          price: formattedTire['precio'],
           specs: {
             width: width,
             aspect_ratio: finalAspectRatio,
@@ -1411,7 +1411,7 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
         combinedMarkdownTable += `| **Llantas ${searchSpec}** | | | |\n`; // Fila de cabecera por medida
         matchingTires.slice(0, resultLimit).forEach((tire, index) => {
           const formattedTire = formatProductPricesNew(tire);
-          combinedMarkdownTable += `| ${index + 1} | ${formattedTire['producto']} | ${parseInt(formattedTire['existencia'])} | $${formattedTire['precioNeto']} |\n`;
+          combinedMarkdownTable += `| ${index + 1} | ${formattedTire['producto']} | ${parseInt(formattedTire['existencia'])} | $${formattedTire['precio']} |\n`;
         });
       } else {
         combinedMarkdownTable += `| - | No se encontraron llantas ${searchSpec} | - | - |\n`;
