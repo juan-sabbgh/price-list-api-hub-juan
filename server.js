@@ -1187,6 +1187,9 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
       limit = 10
     } = req.body;
     const brand = ""
+
+    console.log(`Parametros raw = ${parametros}`)
+
     // Parameter mapping processing
     let finalAspectRatio = aspect_ratio || aspectRatio;
     const finalRimDiameter = rim_diameter || diameter;
