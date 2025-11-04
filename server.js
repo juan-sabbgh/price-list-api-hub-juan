@@ -1351,12 +1351,14 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
       // Crear payload de búsqueda (para esta iteración)
       const textFind = `${width} ${finalAspectRatio ? finalAspectRatio : ""} ${finalRimDiameter.toString().replaceAll("R", "")} ${brand || ""}`.trim();
       const payload = {
-        idEmpG: MAGNO_ID_EMP_G,
-        busqueda: textFind
+        idEmpG: MAGNO_ID_EMP,
+        busqueda: textFind,
+        idSuc: "1628",
+        descontinuado: true
       };
 
       // Realizar la búsqueda
-      let matchingTires = await fetchMagnoData(payload, magnoHeaders, MAGNO_SEARCH_URL_NEW);
+      let matchingTires = await fetchMagnoData(payload, magnoHeaders, MAGNO_SEARCH_URL);
 
       // Construir Regex (para esta iteración)
       // Usamos '|| ""' para finalAspectRatio para evitar "undefined" o "null" en la regex si no existe
@@ -1367,7 +1369,7 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
 
       // Filtrar por existencia y regex
       matchingTires = matchingTires.filter(p =>
-        p.existencia && p.existencia > 0 && regex.test(p.producto)
+        p.existencia && p.existencia > 0 && regex.test(p.descripcion)
       );
 
       // Ordenar por precio
@@ -1392,15 +1394,15 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
         const formattedTire = formatProductPricesNew(tire);
         return {
           id: formattedTire['clave'],
-          product: formattedTire['producto'],
+          product: formattedTire['descripcion'],
           stock: formattedTire['existencia'],
-          price: formattedTire['precio'],
+          price: formattedTire['precioNeto'],
           specs: {
             width: width,
             aspect_ratio: finalAspectRatio,
             rim_diameter: finalRimDiameter,
             type: searchType,
-            original: formattedTire['producto']
+            original: formattedTire['descripcion']
           }
         };
       });
@@ -1411,7 +1413,7 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
         combinedMarkdownTable += `| **Llantas ${searchSpec}** | | | |\n`; // Fila de cabecera por medida
         matchingTires.slice(0, resultLimit).forEach((tire, index) => {
           const formattedTire = formatProductPricesNew(tire);
-          combinedMarkdownTable += `| ${index + 1} | ${formattedTire['producto']} | ${parseInt(formattedTire['existencia'])} | $${formattedTire['precio']} |\n`;
+          combinedMarkdownTable += `| ${index + 1} | ${formattedTire['descripcion']} | ${parseInt(formattedTire['existencia'])} | $${formattedTire['precioNeto']} |\n`;
         });
       } else {
         combinedMarkdownTable += `| - | No se encontraron llantas ${searchSpec} | - | - |\n`;
@@ -1422,7 +1424,7 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
         combinedDescription += `*Llantas ${searchSpec}:*\n`;
         matchingTires.slice(0, resultLimit).forEach((tire, index) => {
           const formattedTire = formatProductPricesNew(tire);
-          combinedDescription += `${index + 1}. ${formattedTire['producto']} - *$${formattedTire['precio'].toFixed(0)}* (Disponible: ${parseInt(formattedTire['existencia'])})\n\n`;
+          combinedDescription += `${index + 1}. ${formattedTire['descripcion']} - *$${formattedTire['precioNeto'].toFixed(0)}* (Disponible: ${parseInt(formattedTire['existencia'])})\n\n`;
         });
       } else {
         await agregarFilaLlantas(textFind);
