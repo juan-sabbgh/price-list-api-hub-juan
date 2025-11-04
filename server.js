@@ -1352,13 +1352,14 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
       const textFind = `${width} ${finalAspectRatio ? finalAspectRatio : ""} ${finalRimDiameter.toString().replaceAll("R", "")} ${brand || ""}`.trim();
       const payload = {
         idEmpG: MAGNO_ID_EMP,
-        busqueda: textFind,
+        textoFind: textFind,
         idSuc: "1628",
         descontinuado: true
       };
 
       // Realizar la búsqueda
       let matchingTires = await fetchMagnoData(payload, magnoHeaders, MAGNO_SEARCH_URL);
+      //console.log(matchingTires);
 
       // Construir Regex (para esta iteración)
       // Usamos '|| ""' para finalAspectRatio para evitar "undefined" o "null" en la regex si no existe
