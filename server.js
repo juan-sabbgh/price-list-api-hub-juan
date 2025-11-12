@@ -1456,7 +1456,7 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
       finalDescription += `¿Le gustaría que le agende una cita para la instalación de sus llantas, o prefiere visitarnos directamente en el horario que le acomode?`;
     } else {
       const mensaje = encodeURIComponent(
-        `¡Hola! Me gustaria encargar unas llantas ${textFind} sobre pedido`
+        `¡Hola! Me gustaria ordenar unas llantas ${combinedSearchParams} sobre pedido`
       );
 
       // Generar link
