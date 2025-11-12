@@ -1258,9 +1258,9 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
 
     // 1. Obtener y parsear el JSON de medidas de llantas
     const parametrosJsonString = await getChatSummary(parametros);
-    
+
     // --- INICIO DE CAMBIOS ---
-    
+
     let jsonToParse = parametrosJsonString;
 
     // 1. Extraer el JSON si está envuelto en un bloque markdown
@@ -1455,9 +1455,17 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
       finalDescription += `\n📦 *Importante:* Le recomendamos confirmar el stock antes de su visita, ya que nuestro inventario se mueve constantemente.\n`;
       finalDescription += `¿Le gustaría que le agende una cita para la instalación de sus llantas, o prefiere visitarnos directamente en el horario que le acomode?`;
     } else {
+      const mensaje = encodeURIComponent(
+        `¡Hola! Me gustaria encargar unas llantas ${textFind} sobre pedido`
+      );
+
+      // Generar link
+      const enlaceLargoWhatsApp = `https://wa.me/${"+525553188770"}?text=${mensaje}`;
       // Mensaje si no se encontró NADA en ninguna búsqueda
-      finalDescription += `🌟 ¡Pero no se preocupe! Podemos gestionar un *pedido especial* para usted. Las llantas por pedido tardan aproximadamente 1 día hábil en llegar\n\n`;
-      finalDescription += `📞 Para coordinar su pedido especial, contacte a nuestro equipo de servicio al cliente:\n`;
+      finalDescription += `🌟 ¡Pero no se preocupe! Podemos gestionar un *pedido especial* para usted. Las llantas sobre pedido tardan aproximadamente 1 día hábil en llegar\n\n`;
+      finalDescription += `📞 Para coordinar su pedido especial, contacte a nuestro equipo de servicio al cliente por medio del siguiente link:\n`;
+      finalDescription += `${enlaceLargoWhatsApp} \n`;
+      finalDescription += `O si lo prefiere, puede marcar al siguiente número:\n`;
       finalDescription += `*55 2637 3003*`;
     }
 
