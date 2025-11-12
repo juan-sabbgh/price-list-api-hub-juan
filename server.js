@@ -1319,7 +1319,7 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
       "sec-fetch-site": "same-site",
       "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0"
     };
-
+    let tireSpecs = []
     // 3. Iterar sobre cada medida de llanta solicitada
     for (const tireQuery of tireQueries) {
       const {
@@ -1347,6 +1347,7 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
         `${width}R${finalRimDiameter}`;
 
       console.log(`🔍 Buscando llanta ${searchSpec} (W:${width}, AR:${finalAspectRatio || 'N/A'}, D:${finalRimDiameter || 'N/A'})...`);
+      tireSpecs.push(searchSpec)
 
       // Crear payload de búsqueda (para esta iteración)
       const textFind = `${width} ${finalAspectRatio ? finalAspectRatio : ""} ${finalRimDiameter.toString().replaceAll("R", "")} ${brand || ""}`.trim();
@@ -1456,7 +1457,7 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
       finalDescription += `¿Le gustaría que le agende una cita para la instalación de sus llantas, o prefiere visitarnos directamente en el horario que le acomode?`;
     } else {
       const mensaje = encodeURIComponent(
-        `¡Hola! Me gustaria ordenar unas llantas ${combinedSearchParams} sobre pedido`
+        `¡Hola! Me gustaria ordenar unas llantas ${tireSpecs.toString()} sobre pedido`
       );
 
       // Generar link
