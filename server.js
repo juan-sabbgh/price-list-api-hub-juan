@@ -1450,8 +1450,8 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
     // Agregar partes comunes a la descripción final
     let finalDescription = combinedDescription;
     if (totalFound > 0) {
-      finalDescription += `🎁 *¡PROMOCIÓN ESPECIAL!*\n`;
-      finalDescription += `Mencione el código de promoción *DYNA25* al visitarnos y llévese un termo o lonchera ¡GRATIS! en la compra de sus llantas.\n\n`;
+      //finalDescription += `🎁 *¡PROMOCIÓN ESPECIAL!*\n`;
+      finalDescription += `Mencione el código *DYNA25* al visitarnos y llévese un termo o lonchera ¡GRATIS! en la compra de sus llantas.\n\n`;
       finalDescription += `✅ *Incluye*: Instalación profesional, válvula nueva, balanceo por computadora, inflado con nitrógeno, garantía de 12 meses y rotación gratis a partir de 2 llantas\n`;
       finalDescription += `\n📦 *Importante:* Le recomendamos confirmar el stock antes de su visita, ya que nuestro inventario se mueve constantemente.\n`;
       finalDescription += `¿Le gustaría que le agende una cita para la instalación de sus llantas, o prefiere visitarnos directamente en el horario que le acomode?`;
