@@ -1328,8 +1328,8 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
         rim_diameter
       } = tireQuery;
 
-      let finalAspectRatio = aspect_ratio;
-      const finalRimDiameter = rim_diameter;
+      let finalAspectRatio = aspect_ratio ? aspect_ratio : "";
+      const finalRimDiameter = rim_diameter ? rim_diameter : "";
 
       // Lógica de Aspect Ratio especial (para esta iteración)
       if (
@@ -1350,7 +1350,7 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
       tireSpecs.push(searchSpec)
 
       // Crear payload de búsqueda (para esta iteración)
-      const textFind = `${width} ${finalAspectRatio ? finalAspectRatio : ""} ${finalRimDiameter.toString().replaceAll("R", "")} ${brand || ""}`.trim();
+      const textFind = `${width} ${finalAspectRatio ? finalAspectRatio : ""} ${finalRimDiameter ? finalRimDiameter.toString().replaceAll("R", "") : ""} ${brand || ""}`.trim();
       const payload = {
         idEmpG: MAGNO_ID_EMP,
         textoFind: textFind,
