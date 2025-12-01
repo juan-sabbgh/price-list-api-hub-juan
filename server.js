@@ -1464,7 +1464,7 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
       const enlaceLargoWhatsApp = `https://wa.me/${"+525553188770"}?text=${mensaje}`;
       // Mensaje si no se encontró NADA en ninguna búsqueda
       finalDescription += `🌟 ¡Pero no se preocupe! Podemos gestionar un *pedido especial* para usted. Las llantas sobre pedido tardan aproximadamente 1 día hábil en llegar\n\n`;
-      finalDescription += `📞 Para coordinar su pedido especial, contacte a nuestro equipo de servicio al cliente por medio del siguiente link:\n`;
+      finalDescription += `📞 Para coordinar su pedido especial, contacte a nuestro equipo de servicio al cliente por medio del siguiente link, ellos le brindaran una cotización de las llantas sobre pedido:\n`;
       finalDescription += `${enlaceLargoWhatsApp} \n`;
       finalDescription += `O si lo prefiere, puede marcar al siguiente número:\n`;
       finalDescription += `*55 2637 3003*`;
