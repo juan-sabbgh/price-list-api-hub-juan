@@ -1364,8 +1364,26 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
 
       // Construir Regex (para esta iteración)
       // Usamos '|| ""' para finalAspectRatio para evitar "undefined" o "null" en la regex si no existe
-      const regex = new RegExp(
+      /*const regex = new RegExp(
         `${width}(?:(?:\\s+${finalAspectRatio || ""})?\\s+(Z?R?${finalRimDiameter.replace("R", "")})|\\/${finalAspectRatio || ""}\\s*Z?R(F?)\\s*${finalRimDiameter.replace("R", "")})`,
+        "i"
+      );*/
+      const cleanRim = finalRimDiameter.toString().replace("R", "");
+
+      // 2. Preparamos la parte del Aspect Ratio.
+      // Si existe, buscamos que tenga opcionalmente separadores antes. Si no existe, es una cadena vacía.
+      const arPart = finalAspectRatio ? `[\\/\\s]*${finalAspectRatio}` : "";
+
+      // 3. Construimos la Regex
+      const regex = new RegExp(
+        // Explicación del patrón:ß
+        // ^              -> (Opcional) Podrías poner ^ para asegurar que empiece ahí, pero filter suele buscar coincidencia parcial.
+        // ${width}       -> 195
+        // ${arPart}      -> Si hay perfil (ej 65), busca "/65" o " 65". Si no, nada.
+        // [\\/\\s]* -> Separador OPCIONAL (0 o más) entre el número anterior y la "R". Esto permite "195R15" y "195 R15".
+        // Z?R?F?         -> Busca opcionalmente Z, R, F (cubre R, ZR, RF, ZRF).
+        // ${cleanRim}    -> 15
+        `${width}${arPart}[\\/\\s]*Z?R?F?${cleanRim}`,
         "i"
       );
 
