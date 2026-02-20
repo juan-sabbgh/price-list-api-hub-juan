@@ -1389,7 +1389,7 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
 
       // Filtrar por existencia y regex
       matchingTires = matchingTires.filter(p =>
-        p.existencia && p.existencia > 0 && regex.test(p.descripcion)
+        p.existencia && p.existencia > 0 && regex.test(p.descripcion) && formatPrice(p['precioNeto']) > 0
       );
 
       // Ordenar por precio
