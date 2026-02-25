@@ -1246,33 +1246,127 @@ async function fetchMagnoData(payload, headers, url) {
   }
 }
 
+// =====================================================
+// Módulo de autenticación Magno con cache en memoria
+// =====================================================
+
+let cachedToken = null;
+let tokenExpiresAt = null;
+
+async function getMagnoToken(forceRefresh = false) {
+  // Si tenemos token válido y no forzamos refresh, reutilizar
+  if (!forceRefresh && cachedToken && tokenExpiresAt && new Date() < tokenExpiresAt) {
+    console.log("🔑 Usando token Magno en cache");
+    return cachedToken;
+  }
+
+  console.log("🔄 Obteniendo nuevo token Magno...");
+
+  const loginPayload = {
+    idEmpG: process.env.MAGNO_ID_EMPG,
+    idEmpresa: process.env.MAGNO_ID_EMPRESA,
+    userName: process.env.MAGNO_USERNAME,
+    password: process.env.MAGNO_PASSWORD
+  };
+
+  const response = await fetch("https://api.admovil.net/api/Auth/inicioSession", {
+    method: "POST",
+    headers: {
+      "accept": "*/*",
+      "content-type": "application/json; text/plain",
+      "origin": "https://grupomagno.admovil.net",
+      "referer": "https://grupomagno.admovil.net/"
+    },
+    body: JSON.stringify(loginPayload)
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("❌ Error en login Magno:", response.status, errorText);
+    throw new Error(`Login Magno falló con status ${response.status}`);
+  }
+
+  const data = await response.json();
+
+  if (!data.access_token) {
+    throw new Error("Login Magno no retornó access_token");
+  }
+
+  cachedToken = data.access_token;
+  // Restar 5 minutos al expires para renovar antes de que expire
+  tokenExpiresAt = new Date(new Date(data.expires).getTime() - 5 * 60 * 1000);
+
+  console.log(`✅ Token Magno obtenido, expira: ${data.expires}`);
+  return cachedToken;
+}
+
+/**
+ * Wrapper para hacer fetch a Magno con auto-refresh de token en caso de 401
+ */
+async function fetchMagnoDataWithAuth(payload, searchUrl) {
+  const makeRequest = async (token) => {
+    const headers = {
+      "accept": "*/*",
+      "accept-language": "es-US,es-419;q=0.9,es;q=0.8,en;q=0.7",
+      "authorization": `Bearer ${token}`,
+      "content-type": "application/json; text/plain",
+      "origin": "https://grupomagno.admovil.net",
+      "referer": "https://grupomagno.admovil.net/",
+      "sec-fetch-dest": "empty",
+      "sec-fetch-mode": "cors",
+      "sec-fetch-site": "same-site"
+    };
+
+    return fetch(searchUrl, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload)
+    });
+  };
+
+  // Primer intento con token actual
+  let token = await getMagnoToken();
+  let response = await makeRequest(token);
+
+  // Si da 401, refrescar token y reintentar UNA vez
+  if (response.status === 401) {
+    console.warn("⚠️ Token Magno expirado, renovando...");
+    token = await getMagnoToken(true); // forceRefresh
+    response = await makeRequest(token);
+  }
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Magno API error ${response.status}: ${errorText}`);
+  }
+
+  return response.json();
+}
+
+// =====================================================
+// Endpoint actualizado
+// =====================================================
 app.post('/api/price-list/tire-search-es-new', async (req, res) => {
   try {
     const {
       parametros,
-      limit = 10 // Límite de resultados POR MEDIDA
+      limit = 10
     } = req.body;
-    const brand = ""; // Marca global, si se usa
+    const brand = "";
 
     console.log(`Parámetros raw = ${parametros}`);
 
     // 1. Obtener y parsear el JSON de medidas de llantas
     const parametrosJsonString = await getChatSummary(parametros);
 
-    // --- INICIO DE CAMBIOS ---
-
     let jsonToParse = parametrosJsonString;
 
-    // 1. Extraer el JSON si está envuelto en un bloque markdown
     const jsonMatch = parametrosJsonString.match(/```json\s*([\s\S]*?)\s*```/);
     if (jsonMatch && jsonMatch[1]) {
       jsonToParse = jsonMatch[1];
     }
 
-    // 2. Limpiar caracteres de espacio "invisibles" (como non-breaking space \u00A0)
     const cleanedJsonString = jsonToParse.replace(/[^\S \t\r\n]/g, ' ').trim();
-
-    // --- FIN DE CAMBIOS ---
 
     console.log(`Parámetros parseados = ${cleanedJsonString}`);
 
@@ -1291,7 +1385,7 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
       });
     }
 
-    // 2. Definir acumuladores para la respuesta final
+    // 2. Acumuladores
     let allRawResults = [];
     let combinedMarkdownTable = "| # | Nombre del Producto | Stock | Precio |\n|:------------|:--------------------|:------|:-------|\n";
     let combinedDescription = "";
@@ -1300,42 +1394,15 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
 
     const resultLimit = Math.min(Math.max(parseInt(limit) || 10, 1), 100);
 
-    // =====================================================
-    // Headers actualizados para la nueva API de Magno
-    // =====================================================
-    const MAGNO_BEARER_TOKEN = process.env.MAGNO_BEARER_TOKEN;
-
-    const magnoHeaders = {
-      "accept": "*/*",
-      "accept-language": "es-US,es-419;q=0.9,es;q=0.8,en;q=0.7",
-      "authorization": `Bearer ${MAGNO_BEARER_TOKEN}`,
-      "content-type": "application/json; text/plain",
-      "origin": "https://grupomagno.admovil.net",
-      "priority": "u=1, i",
-      "referer": "https://grupomagno.admovil.net/",
-      "sec-ch-ua": `"Not:A-Brand";v="99", "Google Chrome";v="145", "Chromium";v="145"`,
-      "sec-ch-ua-mobile": "?0",
-      "sec-ch-ua-platform": `"Windows"`,
-      "sec-fetch-dest": "empty",
-      "sec-fetch-mode": "cors",
-      "sec-fetch-site": "same-site",
-      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
-    };
-
     let tireSpecs = [];
 
-    // 3. Iterar sobre cada medida de llanta solicitada
+    // 3. Iterar sobre cada medida
     for (const tireQuery of tireQueries) {
-      const {
-        width,
-        aspect_ratio,
-        rim_diameter
-      } = tireQuery;
+      const { width, aspect_ratio, rim_diameter } = tireQuery;
 
       let finalAspectRatio = aspect_ratio ? aspect_ratio : "";
       const finalRimDiameter = rim_diameter ? rim_diameter : "";
 
-      // Lógica de Aspect Ratio especial
       if (
         (width == '205' || width == '255') &&
         finalRimDiameter == '18' &&
@@ -1345,50 +1412,46 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
       }
 
       const searchType = finalAspectRatio ? 'car' : 'truck';
-      const searchSpec = searchType === 'car' ?
-        `${width}/${finalAspectRatio}R${finalRimDiameter}` :
-        `${width}R${finalRimDiameter}`;
+      const searchSpec = searchType === 'car'
+        ? `${width}/${finalAspectRatio}R${finalRimDiameter}`
+        : `${width}R${finalRimDiameter}`;
 
       console.log(`🔍 Buscando llanta ${searchSpec} (W:${width}, AR:${finalAspectRatio || 'N/A'}, D:${finalRimDiameter || 'N/A'})...`);
       tireSpecs.push(searchSpec);
 
-      // =====================================================
-      // Payload simplificado para la nueva API
-      // =====================================================
       const textFind = `${width} ${finalAspectRatio ? finalAspectRatio : ""} ${finalRimDiameter ? finalRimDiameter.toString().replaceAll("R", "") : ""} ${brand || ""}`.trim();
       const payload = {
         descontinuado: false,
         textoFind: textFind
       };
 
-      // Realizar la búsqueda con la nueva URL
-      let matchingTires = await fetchMagnoData(payload, magnoHeaders, MAGNO_SEARCH_URL);
+      // =====================================================
+      // Usar el nuevo wrapper con auto-refresh de token
+      // =====================================================
+      let matchingTires = await fetchMagnoDataWithAuth(payload, MAGNO_SEARCH_URL);
 
-      // Construir Regex (para esta iteración)
+      // Filtrado con regex
       const cleanRim = finalRimDiameter.toString().replace("R", "");
       const arPart = finalAspectRatio ? `[\\/\\s]*${finalAspectRatio}` : "";
-
       const regex = new RegExp(
         `${width}${arPart}[\\/\\s]*Z?R?F?${cleanRim}`,
         "i"
       );
 
-      // Filtrar por existencia y regex
       matchingTires = matchingTires.filter(p =>
         p.existencia && p.existencia > 0 && regex.test(p.descripcion) && formatPrice(p['precioNeto']) > 0
       );
 
-      // Ordenar por precio
       matchingTires.sort((a, b) => {
         const priceA = formatPrice(a['precioNeto']);
         const priceB = formatPrice(b['precioNeto']);
         return priceA - priceB;
       });
 
-      // 4. Acumular los resultados de esta iteración
+      // 4. Acumular resultados
       totalFound += matchingTires.length;
       combinedSearchParams.push({
-        width: width,
+        width,
         aspectRatio: finalAspectRatio || null,
         diameter: finalRimDiameter || null,
         type: searchType,
@@ -1403,7 +1466,7 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
           stock: formattedTire['existencia'],
           price: formattedTire['precioNeto'],
           specs: {
-            width: width,
+            width,
             aspect_ratio: finalAspectRatio,
             rim_diameter: finalRimDiameter,
             type: searchType,
@@ -1413,7 +1476,6 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
       });
       allRawResults.push(...formattedResults);
 
-      // Acumular para Markdown
       if (matchingTires.length > 0) {
         combinedMarkdownTable += `| **Llantas ${searchSpec}** | | | |\n`;
         matchingTires.slice(0, resultLimit).forEach((tire, index) => {
@@ -1424,7 +1486,6 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
         combinedMarkdownTable += `| - | No se encontraron llantas ${searchSpec} | - | - |\n`;
       }
 
-      // Acumular para Descripción
       if (matchingTires.length > 0) {
         combinedDescription += `*Llantas ${searchSpec}:*\n`;
         matchingTires.slice(0, resultLimit).forEach((tire, index) => {
@@ -1435,13 +1496,13 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
         await agregarFilaLlantas(textFind);
         combinedDescription += `❌ No encontramos llantas ${searchSpec} (param: ${textFind}).\n\n`;
       }
-    } // --- Fin del bucle for ---
+    }
 
-    // 5. Ensamblar la respuesta final
+    // 5. Respuesta final
     const rawData = {
       searchType: "multiple",
       searchParams: combinedSearchParams,
-      totalFound: totalFound,
+      totalFound,
       results: allRawResults,
       statistics: {
         totalTireProducts: totalFound,
