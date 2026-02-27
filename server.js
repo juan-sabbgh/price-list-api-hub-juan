@@ -230,6 +230,34 @@ function formatProductPricesNew(product) {
   };
 }
 
+/**
+ * Normaliza los productos de la API pública de Magno
+ * al formato que usan los endpoints existentes.
+ *
+ * API pública retorna:  { clave, producto, existencia: "14.0000", precio, importe, marca, ... }
+ * Formato interno usa:  { clave, descripcion, existencia: 14, precioNeto, ... }
+ */
+function normalizeMagnoPublicProducts(products) {
+  if (!Array.isArray(products)) return [];
+  return products.map(p => {
+    let descripcion = p.producto || p.descripcion || "";
+
+    // Quitar la marca duplicada al inicio del nombre
+    // Ej: "AGATE 195/60R15 AGATE AG-219 88V" → "195/60R15 AGATE AG-219 88V"
+    // Ej: "Bridgestone 195/65R15 BRIDGESTONE ECOPIA..." → "195/65R15 BRIDGESTONE ECOPIA..."
+    if (p.marca && descripcion.toUpperCase().startsWith(p.marca.toUpperCase())) {
+      descripcion = descripcion.slice(p.marca.length).trim();
+    }
+
+    return {
+      ...p,
+      descripcion,
+      existencia: parseFloat(p.existencia) || 0,
+      precioNeto: p.precio || p.precioNeto || 0,
+    };
+  });
+}
+
 // Tire specification parsing function
 function parseTireSpecification(productName) {
   const name = String(productName || '').trim();
@@ -704,7 +732,8 @@ async function fetchMagnoPublic(busqueda) {
   }
 
   try {
-    return await response.json();
+    const raw = await response.json();
+    return normalizeMagnoPublicProducts(raw);
   } catch (parseError) {
     console.error("❌ Error parseando respuesta de Magno:", parseError);
     throw new Error("La respuesta de Magno no es JSON válido");
