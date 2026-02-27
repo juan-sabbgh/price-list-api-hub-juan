@@ -42,7 +42,7 @@ const MAGNO_SEARCH_URL_NEW = process.env.MAGNO_SEARCH_URL_NEW
 // Nueva API pública de Magno (sin autenticación)
 // =====================================================
 const MAGNO_PUBLIC_API_URL = "https://api.admovil.net/api/CRM/TiendaOnLine/BusquedaProducto";
-const MAGNO_PUBLIC_ID_EMPG = process.env.MAGNO_PUBLIC_ID_EMPG || "yCzyxxy3sU2IuwrtwIuo5g==";
+const MAGNO_PUBLIC_ID_EMPG = process.env.MAGNO_PUBLIC_ID_EMPG;
 
 const auth = new google.auth.GoogleAuth({
   credentials: GOOGLE_SHEETS_CREDENTIALS,
@@ -685,7 +685,7 @@ app.post('/api/price-list/tire-search', (req, res) => {
 // =====================================================
 async function fetchMagnoPublic(busqueda) {
   const payload = {
-    idEmpG: "yCzyxxy3sU2IuwrtwIuo5g==",
+    idEmpG: MAGNO_PUBLIC_ID_EMPG,
     busqueda: busqueda
   };
 
