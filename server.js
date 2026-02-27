@@ -38,8 +38,14 @@ const MAGNO_ID_EMP_G = process.env.MAGNO_ID_EMP_G
 const MAGNO_SEARCH_URL = process.env.MAGNO_SEARCH_URL
 const MAGNO_SEARCH_URL_NEW = process.env.MAGNO_SEARCH_URL_NEW
 
+// =====================================================
+// Nueva API pública de Magno (sin autenticación)
+// =====================================================
+const MAGNO_PUBLIC_API_URL = "https://api.admovil.net/api/CRM/TiendaOnLine/BusquedaProducto";
+const MAGNO_PUBLIC_ID_EMPG = process.env.MAGNO_PUBLIC_ID_EMPG || "yCzyxxy3sU2IuwrtwIuo5g==";
+
 const auth = new google.auth.GoogleAuth({
-  credentials: GOOGLE_SHEETS_CREDENTIALS, // archivo de cuenta de servicio
+  credentials: GOOGLE_SHEETS_CREDENTIALS,
   scopes: ["https://www.googleapis.com/auth/spreadsheets"],
 });
 
@@ -81,16 +87,15 @@ async function agregarFila(valores) {
   const sheets = google.sheets({ version: "v4", auth: client });
 
   const res = await sheets.spreadsheets.values.append({
-    spreadsheetId: SHEET_ID,        // ID de la hoja
-    range: "Hoja 1!A:G",        // Rango (en qué columnas insertar)
-    valueInputOption: "USER_ENTERED", // Usa USER_ENTERED para que respete formatos de Google Sheets
-    insertDataOption: "INSERT_ROWS",  // Inserta nuevas filas
+    spreadsheetId: SHEET_ID,
+    range: "Hoja 1!A:G",
+    valueInputOption: "USER_ENTERED",
+    insertDataOption: "INSERT_ROWS",
     requestBody: {
-      values: [valores], // 👈 recibe un array con los datos de la fila
+      values: [valores],
     },
   });
 
-  //console.log("Fila añadida:", res.data.updates);
   return true
 }
 
@@ -102,16 +107,15 @@ async function agregarFilaLlantas(especificaciones) {
   const formattedDate = today.toLocaleDateString();
 
   const res = await sheets.spreadsheets.values.append({
-    spreadsheetId: SHEET_ID,        // ID de la hoja
-    range: "Llantas no encontradas!A:B",        // Rango (en qué columnas insertar)
-    valueInputOption: "USER_ENTERED", // Usa USER_ENTERED para que respete formatos de Google Sheets
-    insertDataOption: "INSERT_ROWS",  // Inserta nuevas filas
+    spreadsheetId: SHEET_ID,
+    range: "Llantas no encontradas!A:B",
+    valueInputOption: "USER_ENTERED",
+    insertDataOption: "INSERT_ROWS",
     requestBody: {
-      values: [[especificaciones, formattedDate]], // 👈 recibe un array con los datos de la fila
+      values: [[especificaciones, formattedDate]],
     },
   });
 
-  //console.log("Fila añadida:", res.data.updates);
   return true
 }
 
@@ -141,23 +145,17 @@ async function agregarFilaDemo(valores) {
   const sheets = google.sheets({ version: "v4", auth: client });
 
   const res = await sheets.spreadsheets.values.append({
-    spreadsheetId: "1d2q5Uu8mIzg7PGqa-UkK9on6kkWP-TDKnNQ9k8y6K38",        // ID de la hoja
-    range: "Hoja 1!A:G",        // Rango (en qué columnas insertar)
-    valueInputOption: "USER_ENTERED", // Usa USER_ENTERED para que respete formatos de Google Sheets
-    insertDataOption: "INSERT_ROWS",  // Inserta nuevas filas
+    spreadsheetId: "1d2q5Uu8mIzg7PGqa-UkK9on6kkWP-TDKnNQ9k8y6K38",
+    range: "Hoja 1!A:G",
+    valueInputOption: "USER_ENTERED",
+    insertDataOption: "INSERT_ROWS",
     requestBody: {
-      values: [valores], // 👈 recibe un array con los datos de la fila
+      values: [valores],
     },
   });
 
-  //console.log("Fila añadida:", res.data.updates);
   return true
 }
-
-//leerHoja();
-
-//testing google api
-
 
 // 中间件
 app.use(helmet());
@@ -167,8 +165,8 @@ app.use(express.urlencoded({ extended: true }));
 
 // Rate limiter
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: 'Too many requests from this IP, please try again later.'
 });
 app.use(limiter);
@@ -179,7 +177,6 @@ let priceListData = [];
 // Load Excel file
 function loadExcelData() {
   try {
-    // Use absolute path to ensure file can be found in Vercel environment
     const excelPath = path.join(__dirname, 'LISTA DE PRECIOS 25062025.xlsx');
     console.log('Attempting to load Excel file:', excelPath);
 
@@ -187,7 +184,6 @@ function loadExcelData() {
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
 
-    // Convert to JSON format
     priceListData = XLSX.utils.sheet_to_json(worksheet);
     console.log(`Successfully loaded ${priceListData.length} records`);
     console.log('Data sample:', priceListData.slice(0, 2));
@@ -197,7 +193,6 @@ function loadExcelData() {
     console.error('Current working directory:', process.cwd());
     console.error('__dirname:', __dirname);
 
-    // Try to list files in current directory
     try {
       const files = fs.readdirSync(process.cwd());
       console.error('Current directory files:', files.filter(f => f.includes('.xlsx')));
@@ -209,14 +204,11 @@ function loadExcelData() {
   }
 }
 
-// Load data on startup
-//loadExcelData();
-
 // Price formatting function - convert to integer
 function formatPrice(price) {
   const numPrice = parseFloat(price);
   if (isNaN(numPrice)) return 0;
-  return Math.round(numPrice); // Round to nearest integer
+  return Math.round(numPrice);
 }
 
 // Format product prices to integer
@@ -242,17 +234,14 @@ function formatProductPricesNew(product) {
 function parseTireSpecification(productName) {
   const name = String(productName || '').trim();
 
-  // Tire specification parsing result
   const specs = {
     width: null,
     aspect_ratio: null,
     rim_diameter: null,
-    type: null, // 'car' or 'truck'
+    type: null,
     original: name
   };
 
-  // Car tire format: 155 70 13 75T MIRAGE MR-166 AUTO
-  // Format: width aspect_ratio diameter [other info]
   const carTirePattern = /^(\d{3})\s+(\d{2})\s+(\d{2})\s/;
   const carMatch = name.match(carTirePattern);
 
@@ -264,8 +253,6 @@ function parseTireSpecification(productName) {
     return specs;
   }
 
-  // New: Car tire format: 175 65 R15 84H SAFERICH FRC16
-  // Format: width aspect_ratio R-diameter [other info]
   const carTireWithRPattern = /^(\d{3})\s+(\d{2})\s+R(\d{2})\s/;
   const carWithRMatch = name.match(carTireWithRPattern);
 
@@ -277,8 +264,6 @@ function parseTireSpecification(productName) {
     return specs;
   }
 
-  // Truck tire format: 1100 R22 T-2400 14/C
-  // Format: width R-diameter [other info]
   const truckTirePattern = /^(\d{3,4})\s+R(\d{2})\s/;
   const truckMatch = name.match(truckTirePattern);
 
@@ -289,9 +274,7 @@ function parseTireSpecification(productName) {
     return specs;
   }
 
-  // Other possible tire formats
-  // Format: 155/70R13, 155/70-13, 185/60 R15
-  const standardPattern1 = /(\d{3})\/(\d{2})[-R](\d{2})/; // 155/70R13 or 155/70-13
+  const standardPattern1 = /(\d{3})\/(\d{2})[-R](\d{2})/;
   const standardMatch1 = name.match(standardPattern1);
 
   if (standardMatch1) {
@@ -302,8 +285,7 @@ function parseTireSpecification(productName) {
     return specs;
   }
 
-  // New: Format with space before R: 185/60 R15
-  const standardPattern2 = /(\d{3})\/(\d{2})\s+R(\d{2})/; // 185/60 R15
+  const standardPattern2 = /(\d{3})\/(\d{2})\s+R(\d{2})/;
   const standardMatch2 = name.match(standardPattern2);
 
   if (standardMatch2) {
@@ -314,8 +296,7 @@ function parseTireSpecification(productName) {
     return specs;
   }
 
-  // Additional: More flexible format matching
-  const flexiblePattern = /(\d{3})\/(\d{2})\s*R?\s*(\d{2})/; // Very flexible matching
+  const flexiblePattern = /(\d{3})\/(\d{2})\s*R?\s*(\d{2})/;
   const flexibleMatch = name.match(flexiblePattern);
 
   if (flexibleMatch) {
@@ -326,7 +307,7 @@ function parseTireSpecification(productName) {
     return specs;
   }
 
-  return specs; // Unable to parse
+  return specs;
 }
 
 // Root path
@@ -396,7 +377,6 @@ app.get('/api/price-list/health', (req, res) => {
 
 // Get all products
 app.get('/api/price-list/products', (req, res) => {
-  // Format all product prices to integers
   const formattedData = priceListData.map(product => formatProductPrices(product));
 
   res.json({
@@ -408,19 +388,18 @@ app.get('/api/price-list/products', (req, res) => {
   });
 });
 
-// Product search API - supports multi-parameter search
+// Product search API
 app.post('/api/price-list/search', (req, res) => {
   try {
     const {
-      query,           // General search (product ID or name)
-      productId,       // Exact product ID search
-      productName,     // Product name search
-      priceMin,        // Minimum price
-      priceMax,        // Maximum price
-      limit = 50       // Limit result count, default 50
+      query,
+      productId,
+      productName,
+      priceMin,
+      priceMax,
+      limit = 50
     } = req.body;
 
-    // At least one search condition is required
     if (!query && !productId && !productName && !priceMin && !priceMax) {
       return res.status(400).json({
         success: false,
@@ -432,26 +411,12 @@ app.post('/api/price-list/search', (req, res) => {
           priceMin: 'Minimum price filter',
           priceMax: 'Maximum price filter',
           limit: 'Limit result count (default 50)'
-        },
-        examples: {
-          basic: { query: "1100" },
-          advanced: {
-            productName: "tire",
-            priceMin: 100,
-            priceMax: 500,
-            limit: 10
-          },
-          multiParam: {
-            query: "CCCC",
-            priceMin: 200
-          }
         }
       });
     }
 
     let results = [...priceListData];
 
-    // Apply search filters
     if (query) {
       const searchTerm = String(query).toLowerCase().trim();
       results = results.filter(item => {
@@ -461,7 +426,6 @@ app.post('/api/price-list/search', (req, res) => {
       });
     }
 
-    // Exact product ID search
     if (productId) {
       const searchId = String(productId).toLowerCase().trim();
       results = results.filter(item => {
@@ -470,7 +434,6 @@ app.post('/api/price-list/search', (req, res) => {
       });
     }
 
-    // Product name search
     if (productName) {
       const searchName = String(productName).toLowerCase().trim();
       results = results.filter(item => {
@@ -479,41 +442,24 @@ app.post('/api/price-list/search', (req, res) => {
       });
     }
 
-    // Price range filtering
     if (priceMin !== undefined || priceMax !== undefined) {
       results = results.filter(item => {
         const finalPrice = formatPrice(item['PRECIO FINAL']);
         let passesMin = true;
         let passesMax = true;
-
-        if (priceMin !== undefined) {
-          passesMin = finalPrice >= parseFloat(priceMin);
-        }
-        if (priceMax !== undefined) {
-          passesMax = finalPrice <= parseFloat(priceMax);
-        }
-
+        if (priceMin !== undefined) passesMin = finalPrice >= parseFloat(priceMin);
+        if (priceMax !== undefined) passesMax = finalPrice <= parseFloat(priceMax);
         return passesMin && passesMax;
       });
     }
 
-    // Limit result count
     const limitNum = parseInt(limit) || 50;
-    if (results.length > limitNum) {
-      results = results.slice(0, limitNum);
-    }
+    if (results.length > limitNum) results = results.slice(0, limitNum);
 
-    // Sort: by price (optional)
-    results.sort((a, b) => {
-      const priceA = formatPrice(a['PRECIO FINAL']);
-      const priceB = formatPrice(b['PRECIO FINAL']);
-      return priceA - priceB;
-    });
+    results.sort((a, b) => formatPrice(a['PRECIO FINAL']) - formatPrice(b['PRECIO FINAL']));
 
-    // Format as unified Agent response format
     const searchQuery = query || productId || productName || `price ${priceMin || 0}-${priceMax || '∞'}`;
 
-    // Raw data
     const rawData = {
       totalFound: results.length,
       searchQuery: searchQuery,
@@ -532,19 +478,14 @@ app.post('/api/price-list/search', (req, res) => {
         query: query || null,
         productId: productId || null,
         productName: productName || null,
-        priceRange: {
-          min: priceMin || null,
-          max: priceMax || null
-        },
+        priceRange: { min: priceMin || null, max: priceMax || null },
         limit: limitNum
       },
       isLimited: priceListData.length > limitNum && results.length === limitNum
     };
 
-    // Markdown table format
     let markdownTable = "| Product ID | Product Name | Stock | Final Price |\n|:-----------|:-------------|:------|:------------|\n";
     if (results.length > 0) {
-      // Keep consistent with raw.results, display up to 10 results
       results.slice(0, 10).forEach(item => {
         const formattedItem = formatProductPrices(item);
         markdownTable += `| ${formattedItem['ID Producto']} | ${formattedItem['Producto']} | ${formattedItem['Exit.']} | $${formattedItem['PRECIO FINAL']} |\n`;
@@ -553,7 +494,6 @@ app.post('/api/price-list/search', (req, res) => {
       markdownTable += "| - | No matching products found | - | - |\n";
     }
 
-    // Description information
     let description = `🔍 Product Search Results\n\n`;
     description += `📊 Search Statistics:\n`;
     description += `• Products found: ${results.length}\n`;
@@ -575,42 +515,25 @@ app.post('/api/price-list/search', (req, res) => {
       description += `• Use product ID for exact search`;
     }
 
-    // 返回统一格式
-    res.json({
-      raw: rawData,
-      markdown: markdownTable,
-      type: "markdown",
-      desc: description
-    });
+    res.json({ raw: rawData, markdown: markdownTable, type: "markdown", desc: description });
 
   } catch (error) {
-    console.error('搜索错误:', error);
-    res.status(500).json({
-      success: false,
-      error: '搜索过程中发生错误'
-    });
+    console.error('Search error:', error);
+    res.status(500).json({ success: false, error: 'Error during search' });
   }
 });
 
-// 根据产品ID精确查询
+// Product by ID
 app.get('/api/price-list/product/:id', (req, res) => {
   try {
     const { id } = req.params;
+    if (!id) return res.status(400).json({ success: false, error: 'Product ID required' });
 
-    if (!id) {
-      return res.status(400).json({
-        success: false,
-        error: '产品ID不能为空'
-      });
-    }
-
-    // 精确匹配产品ID
     const product = priceListData.find(item =>
       String(item['ID Producto'] || '').toLowerCase() === id.toLowerCase()
     );
 
     if (product) {
-      // 格式化为统一的Agent响应格式
       const formattedProduct = formatProductPrices(product);
       const rawData = {
         id: formattedProduct['ID Producto'],
@@ -622,7 +545,6 @@ app.get('/api/price-list/product/:id', (req, res) => {
         searchedId: id
       };
 
-      // Markdown table format
       const markdownTable = "| Field | Value |\n|:------|:------|\n" +
         `| Product ID | ${formattedProduct['ID Producto']} |\n` +
         `| Product Name | ${formattedProduct['Producto']} |\n` +
@@ -631,537 +553,256 @@ app.get('/api/price-list/product/:id', (req, res) => {
         `| Cost with Tax | $${formattedProduct['COSTO CON IVA']} |\n` +
         `| Final Price | $${formattedProduct['PRECIO FINAL']} |`;
 
-      // Description information
-      const description = `🔍 Product Details Query Result\n\n` +
-        `📦 Product Information:\n` +
-        `• Product ID: ${formattedProduct['ID Producto']}\n` +
-        `• Product Name: ${formattedProduct['Producto']}\n` +
-        `• Stock Status: ${formattedProduct['Exit.']}\n` +
-        `• Final Price: $${formattedProduct['PRECIO FINAL']}\n\n` +
-        `💰 Price Details:\n` +
-        `• Unit Cost: $${formattedProduct['Costo Uni Unitario']}\n` +
-        `• Cost with Tax: $${formattedProduct['COSTO CON IVA']}\n` +
-        `• Final Price: $${formattedProduct['PRECIO FINAL']}\n\n` +
-        `✅ Product available for ordering or inquiry.`;
+      const description = `🔍 Product Details\n\n` +
+        `📦 Product: ${formattedProduct['Producto']}\n` +
+        `💰 Final Price: $${formattedProduct['PRECIO FINAL']}\n` +
+        `📊 Stock: ${formattedProduct['Exit.']}\n` +
+        `✅ Product available for ordering.`;
 
-      res.json({
-        raw: rawData,
-        markdown: markdownTable,
-        type: "markdown",
-        desc: description
-      });
+      res.json({ raw: rawData, markdown: markdownTable, type: "markdown", desc: description });
     } else {
-      // Product not found unified format
-      const rawData = {
-        searchedId: id,
-        found: false,
-        error: "Product not found"
-      };
-
-      const markdownTable = "| Field | Value |\n|:------|:------|\n" +
-        `| Search ID | ${id} |\n` +
-        `| Status | Not Found |`;
-
-      const description = `❌ Product Query Failed\n\n` +
-        `🔍 Searched Product ID: ${id}\n\n` +
-        `💡 Suggestions:\n` +
-        `• Check if the product ID is correct\n` +
-        `• Use product search function to find similar products\n` +
-        `• Contact customer service to confirm product information`;
-
       res.status(404).json({
-        raw: rawData,
-        markdown: markdownTable,
+        raw: { searchedId: id, found: false },
+        markdown: `| Search ID | ${id} | Status | Not Found |`,
         type: "markdown",
-        desc: description
+        desc: `❌ Product ID ${id} not found.`
       });
     }
-
   } catch (error) {
     console.error('Product query error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error occurred during product query'
-    });
+    res.status(500).json({ success: false, error: 'Error during product query' });
   }
 });
 
 // Reload Excel data
 app.post('/api/price-list/reload', (req, res) => {
   const success = loadExcelData();
-  res.json({
-    success: success,
-    message: success ? 'Data reloaded successfully' : 'Data loading failed',
-    module: 'price-list',
-    total: priceListData.length
-  });
+  res.json({ success, message: success ? 'Data reloaded' : 'Data loading failed', module: 'price-list', total: priceListData.length });
 });
 
 // Tire specification search API
 app.post('/api/price-list/tire-search', (req, res) => {
   try {
-    // Support two parameter formats for compatibility
     const {
-      width,
-      aspect_ratio,
-      aspectRatio,
-      rim_diameter,
-      diameter,
-      exact_match = false,
-      limit = 10  // New: user can specify return count, default 10
+      width, aspect_ratio, aspectRatio, rim_diameter, diameter,
+      exact_match = false, limit = 10
     } = req.body;
 
-    // Parameter mapping processing
     const finalAspectRatio = aspect_ratio || aspectRatio;
     const finalRimDiameter = rim_diameter || diameter;
 
-    // Parameter validation
     if (!width) {
       return res.status(400).json({
         success: false,
         error: 'Tire width (width) is a required parameter',
         usage: {
-          car: 'Car tire: { "width": 155, "aspect_ratio": 70, "rim_diameter": 13, "limit": 20 }',
-          truck: 'Truck tire: { "width": 1100, "rim_diameter": 22, "limit": 20 }'
-        },
-        parameters: {
-          width: 'Required - Tire width',
-          aspect_ratio: 'Optional - Aspect ratio (car tire)',
-          rim_diameter: 'Optional - Diameter',
-          exact_match: 'Optional - Whether to exact match (default false)',
-          limit: 'Optional - Result count (1-100, default 10)'
-        },
-        examples: {
-          car_search: {
-            width: 155,
-            aspect_ratio: 70,
-            rim_diameter: 13,
-            limit: 20
-          },
-          truck_search: {
-            width: 1100,
-            rim_diameter: 22,
-            limit: 50
-          },
-          show_all: {
-            width: 185,
-            aspect_ratio: 55,
-            rim_diameter: 15,
-            limit: 100
-          }
+          car: '{ "width": 155, "aspect_ratio": 70, "rim_diameter": 13 }',
+          truck: '{ "width": 1100, "rim_diameter": 22 }'
         }
       });
     }
 
-    // Determine search type
     const searchType = finalAspectRatio ? 'car' : 'truck';
+    const tireProducts = priceListData.map(product => ({
+      ...product,
+      tire_specs: parseTireSpecification(product['Producto'])
+    })).filter(product => product.tire_specs.width !== null);
 
-    console.log(`🔍 Tire specification search: ${searchType} - width:${width}, aspect ratio:${finalAspectRatio || 'N/A'}, diameter:${finalRimDiameter || 'N/A'}`);
-
-    // Parse tire specifications for all products
-    const tireProducts = priceListData.map(product => {
-      const specs = parseTireSpecification(product['Producto']);
-      return {
-        ...product,
-        tire_specs: specs
-      };
-    }).filter(product => product.tire_specs.width !== null); // Only keep products with parseable specs
-
-    console.log(`📊 Successfully parsed ${tireProducts.length} tire products`);
-
-    // Search for matching tires
     const matchingTires = tireProducts.filter(product => {
       const specs = product.tire_specs;
-
-      // Basic match: width must match
       if (specs.width != width) return false;
 
       if (searchType === 'car') {
-        // Car tire: need to match width, aspect ratio, diameter
-        // Auto-enable exact match when user provides complete specifications
         const shouldUseExactMatch = exact_match || (finalAspectRatio && finalRimDiameter);
-
         if (shouldUseExactMatch) {
-          // Exact match with intelligent diameter matching (ignore R character)
           const aspectMatch = specs.aspect_ratio == finalAspectRatio;
           let rimMatch = false;
           if (finalRimDiameter) {
-            const userDiameter = parseInt(String(finalRimDiameter).replace(/[rR]/g, ''));
-            const productDiameter = parseInt(String(specs.rim_diameter).replace(/[rR]/g, ''));
-            rimMatch = userDiameter === productDiameter;
+            rimMatch = parseInt(String(finalRimDiameter).replace(/[rR]/g, '')) === parseInt(String(specs.rim_diameter).replace(/[rR]/g, ''));
           }
           return aspectMatch && rimMatch;
         } else {
-          // Allow certain specification range matching (only when partial specs provided)
           const aspectMatch = !finalAspectRatio || Math.abs(specs.aspect_ratio - finalAspectRatio) <= 5;
-
-          // Diameter match: intelligent matching, ignore R character
-          // Whether user inputs 15 or R15, should match both 15 and R15
           let rimMatch = true;
           if (finalRimDiameter) {
-            const userDiameter = parseInt(String(finalRimDiameter).replace(/[rR]/g, ''));
-            const productDiameter = parseInt(String(specs.rim_diameter).replace(/[rR]/g, ''));
-            rimMatch = userDiameter === productDiameter;
+            rimMatch = parseInt(String(finalRimDiameter).replace(/[rR]/g, '')) === parseInt(String(specs.rim_diameter).replace(/[rR]/g, ''));
           }
-
           return aspectMatch && rimMatch;
         }
       } else {
-        // Truck tire: only need to match width and diameter
         if (!finalRimDiameter) return true;
-
-        // Diameter match: intelligent matching, ignore R character
-        const userDiameter = parseInt(String(finalRimDiameter).replace(/[rR]/g, ''));
-        const productDiameter = parseInt(String(specs.rim_diameter).replace(/[rR]/g, ''));
-        return userDiameter === productDiameter;
+        return parseInt(String(finalRimDiameter).replace(/[rR]/g, '')) === parseInt(String(specs.rim_diameter).replace(/[rR]/g, ''));
       }
     });
 
-    // Sort by price
-    matchingTires.sort((a, b) => {
-      const priceA = formatPrice(a['PRECIO FINAL']);
-      const priceB = formatPrice(b['PRECIO FINAL']);
-      return priceA - priceB;
-    });
+    matchingTires.sort((a, b) => formatPrice(a['PRECIO FINAL']) - formatPrice(b['PRECIO FINAL']));
 
-    // Format results as unified Agent response format
-    const tireType = searchType === 'car' ? 'Car' : 'Truck';
-    const searchSpec = searchType === 'car'
-      ? `${width}/${finalAspectRatio}R${finalRimDiameter}`
-      : `${width}R${finalRimDiameter}`;
+    const searchSpec = searchType === 'car' ? `${width}/${finalAspectRatio}R${finalRimDiameter}` : `${width}R${finalRimDiameter}`;
+    const resultLimit = Math.min(Math.max(parseInt(limit) || 10, 1), 100);
 
-    // Apply user-specified result count limit
-    const resultLimit = Math.min(Math.max(parseInt(limit) || 10, 1), 100); // 1-100 range, default 10
-
-    // Raw data
     const rawData = {
-      searchType: searchType,
-      searchSpec: searchSpec,
+      searchType, searchSpec,
       totalFound: matchingTires.length,
       results: matchingTires.slice(0, resultLimit).map(tire => {
-        const formattedTire = formatProductPrices(tire);
-        return {
-          id: formattedTire['ID Producto'],
-          product: formattedTire['Producto'],
-          stock: formattedTire['Exit.'],
-          price: formattedTire['PRECIO FINAL'],
-          specs: tire.tire_specs
-        };
+        const f = formatProductPrices(tire);
+        return { id: f['ID Producto'], product: f['Producto'], stock: f['Exit.'], price: f['PRECIO FINAL'], specs: tire.tire_specs };
       }),
-      searchParams: {
-        width: width,
-        aspectRatio: finalAspectRatio || null,
-        diameter: finalRimDiameter || null,
-        type: searchType,
-        exactMatch: exact_match,
-        limit: resultLimit
-      },
-      statistics: {
-        totalTireProducts: tireProducts.length,
-        carTires: tireProducts.filter(p => p.tire_specs.type === 'car').length,
-        truckTires: tireProducts.filter(p => p.tire_specs.type === 'truck').length
-      }
+      searchParams: { width, aspectRatio: finalAspectRatio || null, diameter: finalRimDiameter || null, type: searchType, exactMatch: exact_match, limit: resultLimit }
     };
 
-    // Markdown table format
     let markdownTable = "| Product ID | Product Name | Stock | Price |\n|:-----------|:-------------|:------|:------|\n";
     if (matchingTires.length > 0) {
-      // Use user-specified result count limit
       matchingTires.slice(0, resultLimit).forEach(tire => {
-        const formattedTire = formatProductPrices(tire);
-        markdownTable += `| ${formattedTire['ID Producto']} | ${formattedTire['Producto']} | ${formattedTire['Exit.']} | $${formattedTire['PRECIO FINAL']} |\n`;
+        const f = formatProductPrices(tire);
+        markdownTable += `| ${f['ID Producto']} | ${f['Producto']} | ${f['Exit.']} | $${f['PRECIO FINAL']} |\n`;
       });
     } else {
       markdownTable += "| - | No matching tires found | - | - |\n";
     }
 
-    // Description information
-    let description = `🔍 Tire Search Results - ${tireType} Tire (${searchSpec})\n\n`;
-    description += `📊 Search Statistics:\n`;
-    description += `• Matching tires: ${matchingTires.length}\n`;
-    description += `• Displayed count: ${Math.min(matchingTires.length, resultLimit)}\n`;
-    description += `• Tire type: ${tireType}\n`;
-    description += `• Search specification: ${searchSpec}\n\n`;
-
+    let description = `🔍 Tire Search - ${searchSpec}\n\n`;
     if (matchingTires.length > 0) {
-      const formattedFirstTire = formatProductPrices(matchingTires[0]);
-      const formattedLastTire = formatProductPrices(matchingTires[matchingTires.length - 1]);
-      description += `💰 Price range: $${formattedFirstTire['PRECIO FINAL']} - $${formattedLastTire['PRECIO FINAL']}\n\n`;
-      description += `🏆 All matching tires:\n`;
-      matchingTires.forEach((tire, index) => {
-        const formattedTire = formatProductPrices(tire);
-        description += `${index + 1}. ${formattedTire['Producto']} - $${formattedTire['PRECIO FINAL']}\n`;
+      description += `Found ${matchingTires.length} tires:\n`;
+      matchingTires.slice(0, resultLimit).forEach((tire, i) => {
+        const f = formatProductPrices(tire);
+        description += `${i + 1}. ${f['Producto']} - $${f['PRECIO FINAL']}\n`;
       });
     } else {
-      description += `❌ No matching ${tireType.toLowerCase()} tires found\n`;
-      description += `💡 Suggestions:\n`;
-      description += `• Check if tire specifications are correct\n`;
-      description += `• Try other size specifications\n`;
-      description += `• Contact customer service for more options`;
+      description += `❌ No matching tires found\n`;
     }
 
-    // 返回统一格式
-    res.json({
-      raw: rawData,
-      markdown: markdownTable,
-      type: "markdown",
-      desc: description
-    });
+    res.json({ raw: rawData, markdown: markdownTable, type: "markdown", desc: description });
 
   } catch (error) {
     console.error('Tire search error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error occurred during tire search'
-    });
+    res.status(500).json({ success: false, error: 'Error during tire search' });
   }
 });
+
+// =====================================================
+// Función para buscar en la API pública de Magno
+// (Sin autenticación requerida)
+// =====================================================
+async function fetchMagnoPublic(busqueda) {
+  const payload = {
+    idEmpG: "yCzyxxy3sU2IuwrtwIuo5g==",
+    busqueda: busqueda
+  };
+
+  console.log(`🔍 Magno API pública - busqueda: "${busqueda}"`);
+
+  const response = await fetch(MAGNO_PUBLIC_API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => 'No response body');
+    console.error(`❌ Magno API pública error: ${response.status}`, errorText);
+    throw new Error(`Magno API error ${response.status}: ${errorText}`);
+  }
+
+  try {
+    return await response.json();
+  } catch (parseError) {
+    console.error("❌ Error parseando respuesta de Magno:", parseError);
+    throw new Error("La respuesta de Magno no es JSON válido");
+  }
+}
 
 // Tire specification search API - Spanish version
 app.post('/api/price-list/tire-search-es', async (req, res) => {
   try {
-    // Support two parameter formats for compatibility
     const {
-      width,
-      aspect_ratio,
-      aspectRatio,
-      rim_diameter,
-      diameter,
-      exact_match = false,
-      limit = 10  // New: user can specify return count, default 10
+      width, aspect_ratio, aspectRatio, rim_diameter, diameter,
+      exact_match = false, limit = 10
     } = req.body;
     const brand = ""
-    // Parameter mapping processing
+
     let finalAspectRatio = aspect_ratio || aspectRatio;
     const finalRimDiameter = rim_diameter || diameter;
 
-    // Se establece finalAspectRatio a 70 solo si se cumplen TODAS las condiciones
     if (
       (width == '205' || width == '255') &&
       finalRimDiameter == '18' &&
-      finalAspectRatio == null // Esta condición verifica que aspectRatio sea null o undefined
+      finalAspectRatio == null
     ) {
       finalAspectRatio = 70;
     }
 
-    // Parameter validation
     if (!width) {
       return res.status(400).json({
         success: false,
-        error: 'El ancho del neumático (width) es un parámetro requerido',
-        usage: {
-          car: 'Neumático de auto: { "width": 155, "aspect_ratio": 70, "rim_diameter": 13, "limit": 20 }',
-          truck: 'Neumático de camión: { "width": 1100, "rim_diameter": 22, "limit": 20 }'
-        },
-        parameters: {
-          width: 'Requerido - Ancho del neumático',
-          aspect_ratio: 'Opcional - Relación de aspecto (neumático de auto)',
-          rim_diameter: 'Opcional - Diámetro',
-          exact_match: 'Opcional - Si hacer coincidencia exacta (predeterminado false)',
-          limit: 'Opcional - Cantidad de resultados (1-100, predeterminado 10)'
-        },
-        examples: {
-          car_search: {
-            width: 155,
-            aspect_ratio: 70,
-            rim_diameter: 13,
-            limit: 20
-          },
-          truck_search: {
-            width: 1100,
-            rim_diameter: 22,
-            limit: 50
-          },
-          show_all: {
-            width: 185,
-            aspect_ratio: 55,
-            rim_diameter: 15,
-            limit: 100
-          }
-        }
+        error: 'El ancho del neumático (width) es un parámetro requerido'
       });
     }
 
-    // Determine search type
     const searchType = finalAspectRatio ? 'car' : 'truck';
 
-    console.log(`🔍 Tire specification search (ES): ${searchType} - width:${width}, aspect ratio:${finalAspectRatio || 'N/A'}, diameter:${finalRimDiameter || 'N/A'}`);
+    console.log(`🔍 Tire search (ES): ${searchType} - W:${width}, AR:${finalAspectRatio || 'N/A'}, D:${finalRimDiameter || 'N/A'}`);
 
-    // Parse tire specifications for all products
-    // const tireProducts = priceListData.map(product => {
-    //   const specs = parseTireSpecification(product['Producto']);
-    //   return {
-    //     ...product,
-    //     tire_specs: specs
-    //   };
-    // }).filter(product => product.tire_specs.width !== null); // Only keep products with parseable specs
+    const textFind = `${width} ${finalAspectRatio ? finalAspectRatio : ""} ${finalRimDiameter.toString().replaceAll("R", "")} ${brand || ""}`.trim();
 
-    // console.log(`📊 Successfully parsed ${tireProducts.length} tire products (ES)`);
+    // =====================================================
+    // Usar la nueva API pública (sin auth)
+    // =====================================================
+    let matchingTires = await fetchMagnoPublic(textFind);
 
-    // Search for matching tires Juan
-    const url = MAGNO_SEARCH_URL;
-
-    const headers = {
-      "accept": "*/*",
-      "accept-language": "es,es-ES;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
-      "content-type": "application/json; text/plain",
-      "origin": "https://grupomagno.admovil.net",
-      "priority": "u=1, i",
-      "referer": "https://grupomagno.admovil.net/",
-      "sec-ch-ua": `"Not;A=Brand";v="99", "Microsoft Edge";v="139", "Chromium";v="139"`,
-      "sec-ch-ua-mobile": "?0",
-      "sec-ch-ua-platform": `"Windows"`,
-      "sec-fetch-dest": "empty",
-      "sec-fetch-mode": "cors",
-      "sec-fetch-site": "same-site",
-      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0"
-    };
-    const textFind = `${width} ${finalAspectRatio ? finalAspectRatio : ""} ${finalRimDiameter.toString().replaceAll("R", "")} ${brand || ""}`
-    const payload = {
-      idEmpG: MAGNO_ID_EMP,
-      idSuc: "1628",
-      descontinuado: true,
-      textoFind: textFind
-    };
-    console.log(
-      textFind
-    );
-
-
-    //console.log("Datos enviados a la api de magno", payload)
-
-    async function fetchData() {
-      try {
-        const response = await fetch(url, {
-          method: "POST",
-          headers: headers,
-          body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) {
-          throw new Error(`Error HTTP: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        //console.log("Respuesta:", data);
-
-        return data;
-      } catch (error) {
-        console.error("Ocurrió un error:", error);
-        return []
-      }
-    }
-
-    let matchingTires = await fetchData()
-
-    // Construir prefijo de búsqueda (ejemplo: 205 55 14, 205 55 R14, 205/45R17, 205/45RF17)
     const regex = new RegExp(
       `${width}(?:(?:\\s+${finalAspectRatio})?\\s+(Z?R?${finalRimDiameter.replace("R", "")})|\\/${finalAspectRatio}\\s*Z?R(F?)\\s*${finalRimDiameter.replace("R", "")})`,
       "i"
     );
 
-    // Filter only available tires
     matchingTires = matchingTires.filter(p =>
       p.existencia && p.existencia > 0 && regex.test(p.descripcion)
     );
-    //console.log("Respuesta:", matchingTires);
-    // Sort by price
-    matchingTires.sort((a, b) => {
-      const priceA = formatPrice(a['precioNeto']);
-      const priceB = formatPrice(b['precioNeto']);
-      return priceA - priceB;
-    });
 
-    // Format results as unified Agent response format
-    const tireType = searchType === 'car' ? 'Auto' : 'Camión';
+    matchingTires.sort((a, b) => formatPrice(a['precioNeto']) - formatPrice(b['precioNeto']));
+
     const searchSpec = searchType === 'car'
       ? `${width}/${finalAspectRatio}R${finalRimDiameter}`
       : `${width}R${finalRimDiameter}`;
 
-    // Apply user-specified result count limit
-    const resultLimit = Math.min(Math.max(parseInt(limit) || 10, 1), 100); // 1-100 range, default 10
+    const resultLimit = Math.min(Math.max(parseInt(limit) || 10, 1), 100);
 
-    // Raw data
     const rawData = {
-      searchType: searchType,
-      searchSpec: searchSpec,
+      searchType, searchSpec,
       totalFound: matchingTires.length,
       results: matchingTires.slice(0, resultLimit).map(tire => {
-        const formattedTire = formatProductPrices(tire);
+        const f = formatProductPrices(tire);
         return {
-          id: formattedTire['clave'],
-          product: formattedTire['descripcion'],
-          stock: formattedTire['existencia'],
-          price: formattedTire['precioNeto'],
-          specs: {
-            width: width,
-            aspect_ratio: finalAspectRatio,
-            rim_diameter: finalRimDiameter,
-            type: "car",
-            original: formattedTire['descripcion']
-          }
+          id: f['clave'], product: f['descripcion'], stock: f['existencia'], price: f['precioNeto'],
+          specs: { width, aspect_ratio: finalAspectRatio, rim_diameter: finalRimDiameter, type: "car", original: f['descripcion'] }
         };
       }),
-      searchParams: {
-        width: width,
-        aspectRatio: finalAspectRatio || null,
-        diameter: finalRimDiameter || null,
-        type: searchType,
-        exactMatch: exact_match,
-        limit: resultLimit
-      },
-      statistics: {
-        totalTireProducts: matchingTires.length,
-        carTires: matchingTires.length,
-        //truckTires: matchingTires.filter(p => p.tire_specs.type === 'truck').length
-      }
+      searchParams: { width, aspectRatio: finalAspectRatio || null, diameter: finalRimDiameter || null, type: searchType, exactMatch: exact_match, limit: resultLimit },
+      statistics: { totalTireProducts: matchingTires.length, carTires: matchingTires.length }
     };
-    //console.log(rawData)
 
-    // Markdown table format (Spanish)
     let markdownTable = "| # | Nombre del Producto | Stock | Precio |\n|:------------|:--------------------|:------|:-------|\n";
     if (matchingTires.length > 0) {
-      // Use user-specified result count limit
       matchingTires.slice(0, resultLimit).forEach((tire, index) => {
-        const formattedTire = formatProductPrices(tire);
-        markdownTable += `| ${index + 1} | ${formattedTire['descripcion']} | ${formattedTire['existencia']} | $${formattedTire['precioNeto']} |\n`;
+        const f = formatProductPrices(tire);
+        markdownTable += `| ${index + 1} | ${f['descripcion']} | ${f['existencia']} | $${f['precioNeto']} |\n`;
       });
     } else {
       markdownTable += "| - | No se encontraron neumáticos | - | - |\n";
     }
 
-    // Description information (Spanish) - Version C: Warm Service Style
     let description = ``;
-    //let description = `🔍 Búsqueda completada para llantas - Medida: ${searchSpec}\n\n`;
-    //description += `📋 Información de su búsqueda:\n`;
-    //description += `• ✅ Neumáticos encontrados: ${matchingTires.length}\n`;
-    //description += `• 👁️ Resultados mostrados: ${Math.min(matchingTires.length, resultLimit)}\n`;
-    //description += `• 🚗 Tipo: ${tireType}\n`;
-    //description += `• 📏 Especificación: ${searchSpec}\n\n`;
 
     if (matchingTires.length > 0) {
-      const formattedFirstTire = formatProductPrices(matchingTires[0]);
-      const formattedLastTire = formatProductPrices(matchingTires[matchingTires.length - 1]);
-      //description += `💰 Rango de precios: $${formattedFirstTire['precioNeto'].toFixed(0)} - $${formattedLastTire['precioNeto'].toFixed(0)}\n\n`;
       description += `*Llantas ${searchSpec}:*\n`;
       matchingTires.forEach((tire, index) => {
-        const formattedTire = formatProductPrices(tire);
-        description += `${index + 1}. ${formattedTire['descripcion']} - *$${formattedTire['precioNeto'].toFixed(0)}* (Disponible: ${formattedTire['existencia']})\n\n`;
+        const f = formatProductPrices(tire);
+        description += `${index + 1}. ${f['descripcion']} - *$${f['precioNeto'].toFixed(0)}* (Disponible: ${f['existencia']})\n\n`;
       });
 
       description += `🎁 *¡PROMOCIÓN ESPECIAL!*\n`;
       description += `Mencione el código de promoción *DYNA25* al visitarnos y llévese un termo o lonchera ¡GRATIS! en la compra de sus llantas.\n\n`;
-
       description += `✅ *Incluye*: Instalación profesional, válvula nueva, balanceo por computadora, inflado con nitrógeno, garantía de 12 meses rotación gratis a partir de 2 llantas\n`;
-
-      //description += `\n📍 Le invitamos a visitarnos en nuestra sucursal:\n`;
-      //description += `Calz de las Armas 591, Col Providencia, Azcapotzalco CDMX, CP 02440\n`;
-      //description += `📞 Tel: 55 2637 3003\n`;
-      //description += "https://maps.app.goo.gl/uuYei436nN8pHw34A?g_st=ic"
-      //description += `\n🕐 Horarios: Lunes-Viernes 9:00-18:00 • Sábados 9:00-15:00\n`;
       description += `\n📦 *Importante:* Le recomendamos confirmar el stock antes de su visita, ya que nuestro inventario se mueve constantemente.\n`;
-      //description += `\n🤝 Presentando esta cotización en sucursal, con gusto podemos ofrecerle un **descuento adicional**.\n`;
       description += `¿Le gustaría que le agende una cita para la instalación de sus llantas, o prefiere visitarnos directamente en el horario que le acomode?`;
     } else {
       await agregarFilaLlantas(textFind);
@@ -1169,38 +810,21 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
       description += `🌟 ¡Pero no se preocupe! Podemos gestionar un *pedido especial* para usted. Las llantas por pedido tardan aproximadamente 1 día hábil en llegar\n\n`;
       description += `📞 Para coordinar su pedido especial, contacte a nuestro equipo de servicio al cliente:\n`;
       description += `*55 2637 3003*`;
-      //description += `💡 También puedo ayudarle con:\n`;
-      //description += `• 🔍 Verificar juntos las especificaciones de la llanta\n`;
-      //description += `• 🛞 Buscar con otras medidas alternativas`;
     }
 
-    // Return unified format
-    res.json({
-      raw: rawData,
-      markdown: markdownTable,
-      type: "markdown",
-      desc: description
-    });
+    res.json({ raw: rawData, markdown: markdownTable, type: "markdown", desc: description });
 
   } catch (error) {
     console.error('Tire search error (ES):', error);
-    res.status(500).json({
-      success: false,
-      error: 'Ocurrió un error durante la búsqueda de neumáticos'
-    });
+    res.status(500).json({ success: false, error: 'Ocurrió un error durante la búsqueda de neumáticos' });
   }
 });
 
 
 async function getChatSummary(user_question) {
   try {
-    // Create a more informative prompt including the database results
     const prompt = `Parametros "${user_question}"`;
-
-    const requestData = {
-      username: AS_ACCOUNT,
-      question: prompt
-    };
+    const requestData = { username: AS_ACCOUNT, question: prompt };
 
     const response = await fetch(url, {
       method: 'POST',
@@ -1226,177 +850,43 @@ async function getChatSummary(user_question) {
 }
 
 
-/////New endpoint
-async function fetchMagnoData(payload, headers, url) {
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: headers,
-      body: JSON.stringify(payload)
-    });
-
-    if (!response.ok) {
-      console.error(`Error HTTP: ${response.status} en fetchMagnoData`);
-      return []; // Devuelve vacío en caso de error
-    }
-    return await response.json();
-  } catch (error) {
-    console.error("Ocurrió un error en fetchMagnoData:", error);
-    return []; // Devuelve vacío en caso de excepción
-  }
-}
-
 // =====================================================
-// Módulo de autenticación Magno con cache en memoria
-// =====================================================
-
-let cachedToken = null;
-let tokenExpiresAt = null;
-
-async function getMagnoToken(forceRefresh = false) {
-  // Si tenemos token válido y no forzamos refresh, reutilizar
-  if (!forceRefresh && cachedToken && tokenExpiresAt && new Date() < tokenExpiresAt) {
-    console.log("🔑 Usando token Magno en cache");
-    return cachedToken;
-  }
-
-  console.log("🔄 Obteniendo nuevo token Magno...");
-
-  const loginPayload = {
-    idEmpG: process.env.MAGNO_ID_EMPG,
-    idEmpresa: process.env.MAGNO_ID_EMPRESA,
-    userName: process.env.MAGNO_USERNAME,
-    password: process.env.MAGNO_PASSWORD
-  };
-
-  const response = await fetch("https://api.admovil.net/api/Auth/inicioSession", {
-    method: "POST",
-    headers: {
-      "accept": "*/*",
-      "content-type": "application/json; text/plain",
-      "origin": "https://grupomagno.admovil.net",
-      "referer": "https://grupomagno.admovil.net/"
-    },
-    body: JSON.stringify(loginPayload)
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("❌ Error en login Magno:", response.status, errorText);
-    throw new Error(`Login Magno falló con status ${response.status}`);
-  }
-
-  const data = await response.json();
-
-  if (!data.access_token) {
-    throw new Error("Login Magno no retornó access_token");
-  }
-
-  cachedToken = data.access_token;
-  // Restar 5 minutos al expires para renovar antes de que expire
-  tokenExpiresAt = new Date(new Date(data.expires).getTime() - 5 * 60 * 1000);
-
-  console.log(`✅ Token Magno obtenido, expira: ${data.expires}`);
-  return cachedToken;
-}
-
-/**
- * Wrapper para hacer fetch a Magno con auto-refresh de token en caso de 401
- */
-async function fetchMagnoDataWithAuth(payload, searchUrl) {
-  const makeRequest = async (token) => {
-    const headers = {
-      "accept": "*/*",
-      "accept-language": "es-US,es-419;q=0.9,es;q=0.8,en;q=0.7",
-      "authorization": `Bearer ${token}`,
-      "content-type": "application/json; text/plain",
-      "origin": "https://grupomagno.admovil.net",
-      "referer": "https://grupomagno.admovil.net/",
-      "sec-fetch-dest": "empty",
-      "sec-fetch-mode": "cors",
-      "sec-fetch-site": "same-site"
-    };
-
-    return fetch(searchUrl, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(payload)
-    });
-  };
-
-  // Primer intento con token actual
-  let token = await getMagnoToken();
-  let response = await makeRequest(token);
-
-  // Si da 401, refrescar token y reintentar UNA vez
-  if (response.status === 401) {
-    console.warn("⚠️ Token Magno expirado, renovando...");
-    token = await getMagnoToken(true); // forceRefresh
-    response = await makeRequest(token);
-  }
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Magno API error ${response.status}: ${errorText}`);
-  }
-
-  return response.json();
-}
-
-// =====================================================
-// Endpoint actualizado
+// Endpoint tire-search-es-new (usa API pública)
 // =====================================================
 app.post('/api/price-list/tire-search-es-new', async (req, res) => {
   try {
-    const {
-      parametros,
-      limit = 10
-    } = req.body;
+    const { parametros, limit = 10 } = req.body;
     const brand = "";
 
     console.log(`Parámetros raw = ${parametros}`);
 
-    // 1. Obtener y parsear el JSON de medidas de llantas
     const parametrosJsonString = await getChatSummary(parametros);
 
     let jsonToParse = parametrosJsonString;
-
     const jsonMatch = parametrosJsonString.match(/```json\s*([\s\S]*?)\s*```/);
-    if (jsonMatch && jsonMatch[1]) {
-      jsonToParse = jsonMatch[1];
-    }
+    if (jsonMatch && jsonMatch[1]) jsonToParse = jsonMatch[1];
 
     const cleanedJsonString = jsonToParse.replace(/[^\S \t\r\n]/g, ' ').trim();
-
     console.log(`Parámetros parseados = ${cleanedJsonString}`);
 
     let tireQueries = [];
     try {
       tireQueries = JSON.parse(cleanedJsonString);
-      if (!Array.isArray(tireQueries)) {
-        throw new Error("La respuesta del LLM no fue un arreglo JSON.");
-      }
+      if (!Array.isArray(tireQueries)) throw new Error("La respuesta del LLM no fue un arreglo JSON.");
     } catch (e) {
       console.error("Error parseando la respuesta de getChatSummary:", e);
       console.error("JSON (limpio) que falló:", cleanedJsonString);
-      return res.status(500).json({
-        success: false,
-        error: 'Error al procesar las medidas de las llantas.'
-      });
+      return res.status(500).json({ success: false, error: 'Error al procesar las medidas de las llantas.' });
     }
 
-    // 2. Acumuladores
     let allRawResults = [];
     let combinedMarkdownTable = "| # | Nombre del Producto | Stock | Precio |\n|:------------|:--------------------|:------|:-------|\n";
     let combinedDescription = "";
     let combinedSearchParams = [];
     let totalFound = 0;
-
     const resultLimit = Math.min(Math.max(parseInt(limit) || 10, 1), 100);
-
     let tireSpecs = [];
 
-    // 3. Iterar sobre cada medida
     for (const tireQuery of tireQueries) {
       const { width, aspect_ratio, rim_diameter } = tireQuery;
 
@@ -1420,58 +910,39 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
       tireSpecs.push(searchSpec);
 
       const textFind = `${width} ${finalAspectRatio ? finalAspectRatio : ""} ${finalRimDiameter ? finalRimDiameter.toString().replaceAll("R", "") : ""} ${brand || ""}`.trim();
-      const payload = {
-        descontinuado: false,
-        textoFind: textFind
-      };
 
       // =====================================================
-      // Usar el nuevo wrapper con auto-refresh de token
+      // Usar la API pública (sin auth)
       // =====================================================
-      let matchingTires = await fetchMagnoDataWithAuth(payload, MAGNO_SEARCH_URL);
+      let matchingTires = [];
+      try {
+        matchingTires = await fetchMagnoPublic(textFind);
+      } catch (err) {
+        console.error(`❌ Error buscando ${searchSpec}:`, err.message);
+        matchingTires = [];
+      }
 
-      // Filtrado con regex
       const cleanRim = finalRimDiameter.toString().replace("R", "");
       const arPart = finalAspectRatio ? `[\\/\\s]*${finalAspectRatio}` : "";
-      const regex = new RegExp(
-        `${width}${arPart}[\\/\\s]*Z?R?F?${cleanRim}`,
-        "i"
-      );
+      const regex = new RegExp(`${width}${arPart}[\\/\\s]*Z?R?F?${cleanRim}`, "i");
 
       matchingTires = matchingTires.filter(p =>
         p.existencia && p.existencia > 0 && regex.test(p.descripcion) && formatPrice(p['precioNeto']) > 0
       );
 
-      matchingTires.sort((a, b) => {
-        const priceA = formatPrice(a['precioNeto']);
-        const priceB = formatPrice(b['precioNeto']);
-        return priceA - priceB;
-      });
+      matchingTires.sort((a, b) => formatPrice(a['precioNeto']) - formatPrice(b['precioNeto']));
 
-      // 4. Acumular resultados
       totalFound += matchingTires.length;
       combinedSearchParams.push({
-        width,
-        aspectRatio: finalAspectRatio || null,
-        diameter: finalRimDiameter || null,
-        type: searchType,
-        limit: resultLimit
+        width, aspectRatio: finalAspectRatio || null,
+        diameter: finalRimDiameter || null, type: searchType, limit: resultLimit
       });
 
       const formattedResults = matchingTires.slice(0, resultLimit).map(tire => {
-        const formattedTire = formatProductPricesNew(tire);
+        const f = formatProductPricesNew(tire);
         return {
-          id: formattedTire['clave'],
-          product: formattedTire['descripcion'],
-          stock: formattedTire['existencia'],
-          price: formattedTire['precioNeto'],
-          specs: {
-            width,
-            aspect_ratio: finalAspectRatio,
-            rim_diameter: finalRimDiameter,
-            type: searchType,
-            original: formattedTire['descripcion']
-          }
+          id: f['clave'], product: f['descripcion'], stock: f['existencia'], price: f['precioNeto'],
+          specs: { width, aspect_ratio: finalAspectRatio, rim_diameter: finalRimDiameter, type: searchType, original: f['descripcion'] }
         };
       });
       allRawResults.push(...formattedResults);
@@ -1479,8 +950,8 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
       if (matchingTires.length > 0) {
         combinedMarkdownTable += `| **Llantas ${searchSpec}** | | | |\n`;
         matchingTires.slice(0, resultLimit).forEach((tire, index) => {
-          const formattedTire = formatProductPricesNew(tire);
-          combinedMarkdownTable += `| ${index + 1} | ${formattedTire['descripcion']} | ${parseInt(formattedTire['existencia'])} | $${formattedTire['precioNeto']} |\n`;
+          const f = formatProductPricesNew(tire);
+          combinedMarkdownTable += `| ${index + 1} | ${f['descripcion']} | ${parseInt(f['existencia'])} | $${f['precioNeto']} |\n`;
         });
       } else {
         combinedMarkdownTable += `| - | No se encontraron llantas ${searchSpec} | - | - |\n`;
@@ -1489,8 +960,8 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
       if (matchingTires.length > 0) {
         combinedDescription += `*Llantas ${searchSpec}:*\n`;
         matchingTires.slice(0, resultLimit).forEach((tire, index) => {
-          const formattedTire = formatProductPricesNew(tire);
-          combinedDescription += `${index + 1}. ${formattedTire['descripcion']} - *$${formattedTire['precioNeto'].toFixed(0)}* (Disponible: ${parseInt(formattedTire['existencia'])})\n\n`;
+          const f = formatProductPricesNew(tire);
+          combinedDescription += `${index + 1}. ${f['descripcion']} - *$${f['precioNeto'].toFixed(0)}* (Disponible: ${parseInt(f['existencia'])})\n\n`;
         });
       } else {
         await agregarFilaLlantas(textFind);
@@ -1498,7 +969,6 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
       }
     }
 
-    // 5. Respuesta final
     const rawData = {
       searchType: "multiple",
       searchParams: combinedSearchParams,
@@ -1518,9 +988,7 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
       finalDescription += `\n📦 *Importante:* Le recomendamos confirmar el stock antes de su visita, ya que nuestro inventario se mueve constantemente.\n`;
       finalDescription += `¿Le gustaría que le agende una cita para la instalación de sus llantas, o prefiere visitarnos directamente en el horario que le acomode?`;
     } else {
-      const mensaje = encodeURIComponent(
-        `¡Hola! Me gustaria ordenar unas llantas ${tireSpecs.toString()} sobre pedido`
-      );
+      const mensaje = encodeURIComponent(`¡Hola! Me gustaria ordenar unas llantas ${tireSpecs.toString()} sobre pedido`);
       const enlaceLargoWhatsApp = `https://wa.me/${"+525553188770"}?text=${mensaje}`;
       finalDescription += `🌟 ¡Pero no se preocupe! Podemos gestionar un *pedido especial* para usted. Las llantas sobre pedido tardan aproximadamente 1 día hábil en llegar\n\n`;
       finalDescription += `📞 Para coordinar su pedido especial, contacte a nuestro equipo de servicio al cliente por medio del siguiente link, ellos le brindaran una cotización de las llantas sobre pedido:\n`;
@@ -1529,267 +997,101 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
       finalDescription += `*55 2637 3003*`;
     }
 
-    res.json({
-      raw: rawData,
-      markdown: combinedMarkdownTable,
-      type: "markdown",
-      desc: finalDescription
-    });
+    res.json({ raw: rawData, markdown: combinedMarkdownTable, type: "markdown", desc: finalDescription });
 
   } catch (error) {
     console.error('Tire search error (ES) - Handler principal:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Ocurrió un error durante la búsqueda de neumáticos'
-    });
+    res.status(500).json({ success: false, error: 'Ocurrió un error durante la búsqueda de neumáticos' });
   }
 });
 
+// Demo tire search
 app.post('/api/price-list/tire-search-es-demo', async (req, res) => {
   try {
-    // Support two parameter formats for compatibility
     const {
-      width,
-      aspect_ratio,
-      aspectRatio,
-      rim_diameter,
-      diameter,
-      exact_match = false,
-      brand,
-      limit = 10  // New: user can specify return count, default 10
+      width, aspect_ratio, aspectRatio, rim_diameter, diameter,
+      exact_match = false, brand, limit = 10
     } = req.body;
 
-    // Parameter mapping processing
     let finalAspectRatio = aspect_ratio || aspectRatio;
     const finalRimDiameter = rim_diameter || diameter;
 
-    // Se establece finalAspectRatio a 70 solo si se cumplen TODAS las condiciones
     if (
       (width == '205' || width == '255') &&
       finalRimDiameter == '18' &&
-      finalAspectRatio == null // Esta condición verifica que aspectRatio sea null o undefined
+      finalAspectRatio == null
     ) {
       finalAspectRatio = 70;
     }
 
-    // Parameter validation
     if (!width) {
-      return res.status(400).json({
-        success: false,
-        error: 'El ancho del neumático (width) es un parámetro requerido',
-        usage: {
-          car: 'Neumático de auto: { "width": 155, "aspect_ratio": 70, "rim_diameter": 13, "limit": 20 }',
-          truck: 'Neumático de camión: { "width": 1100, "rim_diameter": 22, "limit": 20 }'
-        },
-        parameters: {
-          width: 'Requerido - Ancho del neumático',
-          aspect_ratio: 'Opcional - Relación de aspecto (neumático de auto)',
-          rim_diameter: 'Opcional - Diámetro',
-          exact_match: 'Opcional - Si hacer coincidencia exacta (predeterminado false)',
-          limit: 'Opcional - Cantidad de resultados (1-100, predeterminado 10)'
-        },
-        examples: {
-          car_search: {
-            width: 155,
-            aspect_ratio: 70,
-            rim_diameter: 13,
-            limit: 20
-          },
-          truck_search: {
-            width: 1100,
-            rim_diameter: 22,
-            limit: 50
-          },
-          show_all: {
-            width: 185,
-            aspect_ratio: 55,
-            rim_diameter: 15,
-            limit: 100
-          }
-        }
-      });
+      return res.status(400).json({ success: false, error: 'El ancho del neumático (width) es un parámetro requerido' });
     }
 
-    // Determine search type
     const searchType = finalAspectRatio ? 'car' : 'truck';
+    const textFind = `${width} ${finalAspectRatio ? finalAspectRatio : ""} ${finalRimDiameter.toString().replaceAll("R", "")} ${brand || ""}`.trim();
 
-    console.log(`🔍 Tire specification search (ES): ${searchType} - width:${width}, aspect ratio:${finalAspectRatio || 'N/A'}, diameter:${finalRimDiameter || 'N/A'}`);
+    console.log(`🔍 Demo search: ${textFind}`);
 
-    // Parse tire specifications for all products
-    // const tireProducts = priceListData.map(product => {
-    //   const specs = parseTireSpecification(product['Producto']);
-    //   return {
-    //     ...product,
-    //     tire_specs: specs
-    //   };
-    // }).filter(product => product.tire_specs.width !== null); // Only keep products with parseable specs
+    // =====================================================
+    // Usar la API pública (sin auth)
+    // =====================================================
+    let matchingTires = await fetchMagnoPublic(textFind);
 
-    // console.log(`📊 Successfully parsed ${tireProducts.length} tire products (ES)`);
-
-    // Search for matching tires Juan
-    const url = MAGNO_SEARCH_URL;
-
-    const headers = {
-      "accept": "*/*",
-      "accept-language": "es,es-ES;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
-      "content-type": "application/json; text/plain",
-      "origin": "https://grupomagno.admovil.net",
-      "priority": "u=1, i",
-      "referer": "https://grupomagno.admovil.net/",
-      "sec-ch-ua": `"Not;A=Brand";v="99", "Microsoft Edge";v="139", "Chromium";v="139"`,
-      "sec-ch-ua-mobile": "?0",
-      "sec-ch-ua-platform": `"Windows"`,
-      "sec-fetch-dest": "empty",
-      "sec-fetch-mode": "cors",
-      "sec-fetch-site": "same-site",
-      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0"
-    };
-
-    const payload = {
-      idEmpG: MAGNO_ID_EMP,
-      idSuc: "1628",
-      descontinuado: true,
-      textoFind: `${width} ${finalAspectRatio ? finalAspectRatio : ""} ${finalRimDiameter.toString().replaceAll("R", "")} ${brand || ""}`
-    };
-    console.log(
-      `${width} ${finalAspectRatio ? finalAspectRatio : ""} ${finalRimDiameter.toString().replaceAll("R", "")} ${brand || ""}`
-    );
-
-
-    //console.log("Datos enviados a la api de magno", payload)
-
-    async function fetchData() {
-      try {
-        const response = await fetch(url, {
-          method: "POST",
-          headers: headers,
-          body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) {
-          throw new Error(`Error HTTP: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        //console.log("Respuesta:", data);
-
-        return data;
-      } catch (error) {
-        console.error("Ocurrió un error:", error);
-        return []
-      }
-    }
-
-    let matchingTires = await fetchData()
-
-    // Construir prefijo de búsqueda (ejemplo: 205 55 14 ó 205 55 R14)
     const regex = new RegExp(
       `${width}(?:(?:\\s+${finalAspectRatio || ""})?\\s+(Z?R?${finalRimDiameter.replace("R", "")})|\\/${finalAspectRatio || ""}\\s*Z?R(F?)\\s*${finalRimDiameter.replace("R", "")})`,
       "i"
     );
 
-    // Filter only available tires
     matchingTires = matchingTires.filter(p =>
       p.existencia && p.existencia > 0 && regex.test(p.descripcion)
     );
-    //console.log("Respuesta:", matchingTires);
-    // Sort by price
-    matchingTires.sort((a, b) => {
-      const priceA = formatPrice(a['precioNeto']);
-      const priceB = formatPrice(b['precioNeto']);
-      return priceA - priceB;
-    });
 
-    // Format results as unified Agent response format
-    const tireType = searchType === 'car' ? 'Auto' : 'Camión';
+    matchingTires.sort((a, b) => formatPrice(a['precioNeto']) - formatPrice(b['precioNeto']));
+
     const searchSpec = searchType === 'car'
       ? `${width}/${finalAspectRatio}R${finalRimDiameter}`
       : `${width}R${finalRimDiameter}`;
 
-    // Apply user-specified result count limit
-    const resultLimit = Math.min(Math.max(parseInt(limit) || 10, 1), 100); // 1-100 range, default 10
+    const resultLimit = Math.min(Math.max(parseInt(limit) || 10, 1), 100);
 
-    // Raw data
     const rawData = {
-      searchType: searchType,
-      searchSpec: searchSpec,
+      searchType, searchSpec,
       totalFound: matchingTires.length,
       results: matchingTires.slice(0, resultLimit).map(tire => {
-        const formattedTire = formatProductPrices(tire);
+        const f = formatProductPrices(tire);
         return {
-          id: formattedTire['clave'],
-          product: formattedTire['descripcion'],
-          stock: formattedTire['existencia'],
-          price: formattedTire['precioNeto'],
-          specs: {
-            width: width,
-            aspect_ratio: finalAspectRatio,
-            rim_diameter: finalRimDiameter,
-            type: "car",
-            original: formattedTire['descripcion']
-          }
+          id: f['clave'], product: f['descripcion'], stock: f['existencia'], price: f['precioNeto'],
+          specs: { width, aspect_ratio: finalAspectRatio, rim_diameter: finalRimDiameter, type: "car", original: f['descripcion'] }
         };
       }),
-      searchParams: {
-        width: width,
-        aspectRatio: finalAspectRatio || null,
-        diameter: finalRimDiameter || null,
-        type: searchType,
-        exactMatch: exact_match,
-        limit: resultLimit
-      },
-      statistics: {
-        totalTireProducts: matchingTires.length,
-        carTires: matchingTires.length,
-        //truckTires: matchingTires.filter(p => p.tire_specs.type === 'truck').length
-      }
+      searchParams: { width, aspectRatio: finalAspectRatio || null, diameter: finalRimDiameter || null, type: searchType, exactMatch: exact_match, limit: resultLimit },
+      statistics: { totalTireProducts: matchingTires.length, carTires: matchingTires.length }
     };
-    //console.log(rawData)
 
-    // Markdown table format (Spanish)
     let markdownTable = "| # | Nombre del Producto | Stock | Precio |\n|:------------|:--------------------|:------|:-------|\n";
     if (matchingTires.length > 0) {
-      // Use user-specified result count limit
       matchingTires.slice(0, resultLimit).forEach((tire, index) => {
-        const formattedTire = formatProductPrices(tire);
-        markdownTable += `| ${index + 1} | ${formattedTire['descripcion']} | ${formattedTire['existencia']} | $${formattedTire['precioNeto']} |\n`;
+        const f = formatProductPrices(tire);
+        markdownTable += `| ${index + 1} | ${f['descripcion']} | ${f['existencia']} | $${f['precioNeto']} |\n`;
       });
     } else {
       markdownTable += "| - | No se encontraron neumáticos | - | - |\n";
     }
 
-    // Description information (Spanish) - Version C: Warm Service Style
     let description = ``;
-    //let description = `🔍 Búsqueda completada para llantas - Medida: ${searchSpec}\n\n`;
-    //description += `📋 Información de su búsqueda:\n`;
-    //description += `• ✅ Neumáticos encontrados: ${matchingTires.length}\n`;
-    //description += `• 👁️ Resultados mostrados: ${Math.min(matchingTires.length, resultLimit)}\n`;
-    //description += `• 🚗 Tipo: ${tireType}\n`;
-    //description += `• 📏 Especificación: ${searchSpec}\n\n`;
 
     if (matchingTires.length > 0) {
-      const formattedFirstTire = formatProductPrices(matchingTires[0]);
-      const formattedLastTire = formatProductPrices(matchingTires[matchingTires.length - 1]);
-      //description += `💰 Rango de precios: $${formattedFirstTire['precioNeto'].toFixed(0)} - $${formattedLastTire['precioNeto'].toFixed(0)}\n\n`;
       description += `*Llantas ${searchSpec}:*\n`;
       matchingTires.forEach((tire, index) => {
-        const formattedTire = formatProductPrices(tire);
-        description += `${index + 1}. ${formattedTire['descripcion']} - *$${formattedTire['precioNeto'].toFixed(0)}* (Disponible: ${formattedTire['existencia']})\n\n`;
+        const f = formatProductPrices(tire);
+        description += `${index + 1}. ${f['descripcion']} - *$${f['precioNeto'].toFixed(0)}* (Disponible: ${f['existencia']})\n\n`;
       });
 
       description += `🎁 *¡PROMOCIÓN ESPECIAL!*\n`;
       description += `Mencione el código de promoción *DYNA25* al visitarnos y llévese un termo o lonchera ¡GRATIS! en la compra de sus llantas.\n\n`;
-
       description += `✅ *Incluye*: Instalación profesional, válvula nueva, balanceo por computadora, inflado con nitrógeno, garantía de 12 meses rotación gratis a partir de 2 llantas\n`;
-
-      //description += `\n📍 Le invitamos a visitarnos en nuestra sucursal:\n`;
-      //description += `Calz de las Armas 591, Col Providencia, Azcapotzalco CDMX, CP 02440\n`;
-      //description += `📞 Tel: 55 2637 3003\n`;
-      //description += "https://maps.app.goo.gl/uuYei436nN8pHw34A?g_st=ic"
-      //description += `\n🕐 Horarios: Lunes-Viernes 9:00-18:00 • Sábados 9:00-15:00\n`;
       description += `\n📦 *Importante:* Le recomendamos confirmar el stock antes de su visita, ya que nuestro inventario se mueve constantemente.\n\n`;
-      //description += `\n🤝 Presentando esta cotización en sucursal, con gusto podemos ofrecerle un **descuento adicional**.\n`;
       description += `¿Le gustaría que le agende una cita para la instalación de sus llantas, o prefiere visitarnos directamente en el horario que le acomode?`;
     } else {
       description += `❌ Lamentamos informarle que no encontramos llantas ${searchSpec} en nuestro inventario actual\n\n`;
@@ -1801,328 +1103,149 @@ app.post('/api/price-list/tire-search-es-demo', async (req, res) => {
       description += `• 🛞 Buscar con otras medidas alternativas`;
     }
 
-    // Return unified format
-    res.json({
-      raw: rawData,
-      markdown: markdownTable,
-      type: "markdown",
-      desc: description
-    });
+    res.json({ raw: rawData, markdown: markdownTable, type: "markdown", desc: description });
 
   } catch (error) {
-    console.error('Tire search error (ES):', error);
-    res.status(500).json({
-      success: false,
-      error: 'Ocurrió un error durante la búsqueda de neumáticos'
-    });
+    console.error('Tire search error (ES demo):', error);
+    res.status(500).json({ success: false, error: 'Ocurrió un error durante la búsqueda de neumáticos' });
   }
 });
 
-// Tire specification search API - Spanish version
+// Appointment creation
 app.post('/api/appointment/create', async (req, res) => {
   try {
-    // Support two parameter formats for compatibility
-    const {
-      llanta,
-      servicio,
-      nombre,
-      numero_contacto,
-      fecha,
-      hora
-    } = req.body;
+    const { llanta, servicio, nombre, numero_contacto, fecha, hora } = req.body;
 
-    // check if data is passed correctly
-    console.log("llanta: ", llanta)
-    console.log("nombre: ", nombre)
-    console.log("numero_contacto: ", numero_contacto)
-    console.log("fecha: ", fecha)
-    console.log("hora: ", hora)
+    console.log("Appointment:", { llanta, nombre, numero_contacto, fecha, hora });
 
-    //create appointment code
-    //const appointment_code = Math.floor(100000 + Math.random() * 900000);
     const num_registros = await obtenerNumeroFilas();
-    const appointment_code = `CRDYNA${num_registros}`
-    //create new row in sheets
-    const row_data = [
-      appointment_code,
-      nombre,
-      numero_contacto ? numero_contacto : "",
-      llanta ? llanta : "",
-      servicio ? servicio : "",
-      fecha ? fecha : "",
-      hora ? hora : ""
-    ]
+    const appointment_code = `CRDYNA${num_registros}`;
 
-    const response_add_row = await agregarFila(row_data)
+    const row_data = [
+      appointment_code, nombre, numero_contacto || "",
+      llanta || "", servicio || "", fecha || "", hora || ""
+    ];
+
+    const response_add_row = await agregarFila(row_data);
 
     if (response_add_row) {
       const rawData = {
-        "estado_reservacion": "Generada exitosamente",
-        "codigo_reservacion": appointment_code,
-        "datos_reserva": {
-          "nombre": nombre,
-          "servicio": servicio ? servicio : "",
-          "llanta": llanta ? llanta : "",
-          "fecha": fecha ? fecha : "",
-          "hora": hora ? hora : ""
-        }
-      }
+        estado_reservacion: "Generada exitosamente",
+        codigo_reservacion: appointment_code,
+        datos_reserva: { nombre, servicio: servicio || "", llanta: llanta || "", fecha: fecha || "", hora: hora || "" }
+      };
 
       let description = `📅 ¡Su reservación ha sido generada exitosamente!\n\n`;
       description += `🔑 Código de reservación: **${appointment_code}**\n\n`;
       description += `📋 Detalles de su reservación:\n`;
       description += `• 👤 Nombre: ${nombre}\n`;
-      description += `• 🔧 Servicio: ${servicio ? servicio : "N/A"}\n`;
-      description += `• 🛞 Llanta: ${llanta ? llanta : "N/A"}\n`;
-      description += `• 📆 Fecha: ${fecha ? fecha : "N/A"}\n`;
-      description += `• ⏰ Hora: ${hora ? hora : "N/A"}\n\n`;
+      description += `• 🔧 Servicio: ${servicio || "N/A"}\n`;
+      description += `• 🛞 Llanta: ${llanta || "N/A"}\n`;
+      description += `• 📆 Fecha: ${fecha || "N/A"}\n`;
+      description += `• ⏰ Hora: ${hora || "N/A"}\n\n`;
       description += `🤝 Le esperamos en nuestra sucursal:\n`;
       description += `📍 Calz de las Armas 591, Col. Providencia, Azcapotzalco CDMX, CP 02440\n`;
       description += `📞 Tel: 55 2637 3003\n`;
       description += `🕐 Horarios: Lunes-Viernes 9:00-18:00 • Sábados 9:00-15:00\n\n`;
 
-      const markdownTable = "| Se agendó la reservación con exito |\n"
-      // Return unified format
-
-      res.json({
-        raw: rawData,
-        markdown: markdownTable,
-        type: "markdown",
-        desc: description
-      });
-    }
-
-    else {
-      const rawData = {
-        "estado_reservacion": "No se pudo generar",
-        "codigo_reservacion": appointment_code,
-        "datos_reserva": {
-          "nombre": nombre,
-          "servicio": servicio ? servicio : "",
-          "llanta": llanta ? llanta : "",
-          "fecha": fecha ? fecha : "",
-          "hora": hora ? hora : ""
-        }
-      }
-
+      res.json({ raw: rawData, markdown: "| Se agendó la reservación con exito |\n", type: "markdown", desc: description });
+    } else {
       let description = `⚠️ Lamentamos informarle que **no se pudo generar su reservación en este momento**.\n\n`;
-      description += `🔑 Código de intento: **${appointment_code}**\n\n`;
-      description += `📋 Detalles que intentó registrar:\n`;
-      description += `• 👤 Nombre: ${nombre}\n`;
-      description += `• 🔧 Servicio: ${servicio ? servicio : "N/A"}\n`;
-      description += `• 🛞 Llanta: ${llanta ? llanta : "N/A"}\n`;
-      description += `• 📆 Fecha: ${fecha ? fecha : "N/A"}\n`;
-      description += `• ⏰ Hora: ${hora ? hora : "N/A"}\n\n`;
-      description += `🙏 Por favor, intente nuevamente en unos minutos o comuníquese con nosotros para apoyo directo.\n\n`;
-      description += `📍 Grupo Magno – Calz de las Armas 591, Col. Providencia, Azcapotzalco CDMX, CP 02440\n`;
-      description += `📞 Tel: 55 2637 3003\n`;
-      description += `🕐 Horarios: Lunes-Viernes 9:00-18:00 • Sábados 9:00-15:00`;
-
-      const markdownTable = "| ❌ No se pudo agendar la reservación |\n";
+      description += `🙏 Por favor, intente nuevamente en unos minutos o comuníquese con nosotros.\n`;
+      description += `📞 Tel: 55 2637 3003`;
 
       res.json({
-        raw: rawData,
-        markdown: markdownTable,
-        type: "markdown",
-        desc: description
+        raw: { estado_reservacion: "No se pudo generar", codigo_reservacion: appointment_code },
+        markdown: "| ❌ No se pudo agendar la reservación |\n",
+        type: "markdown", desc: description
       });
     }
-
-
-
-
-
-
   } catch (error) {
     console.error('Appointment creation error', error);
-    res.status(500).json({
-      success: false,
-      error: 'Ocurrió un error al crear la reservacion'
-    });
+    res.status(500).json({ success: false, error: 'Ocurrió un error al crear la reservacion' });
   }
 });
 
-// Tire specification search API - Spanish version
+// Appointment creation - Demo
 app.post('/api/appointment/create-demo', async (req, res) => {
   try {
-    // Support two parameter formats for compatibility
-    const {
-      llanta,
-      servicio,
-      nombre,
-      numero_contacto,
-      fecha,
-      hora
-    } = req.body;
+    const { llanta, servicio, nombre, numero_contacto, fecha, hora } = req.body;
 
-    // check if data is passed correctly
-    console.log("llanta: ", llanta)
-    console.log("nombre: ", nombre)
-    console.log("numero_contacto: ", numero_contacto)
-    console.log("fecha: ", fecha)
-    console.log("hora: ", hora)
+    console.log("Demo Appointment:", { llanta, nombre, numero_contacto, fecha, hora });
 
-    //create appointment code
-    //const appointment_code = Math.floor(100000 + Math.random() * 900000);
     const num_registros = await obtenerNumeroFilasDemo();
-    const appointment_code = `CRDYNA${num_registros}`
-    //create new row in sheets
-    const row_data = [
-      appointment_code,
-      nombre,
-      numero_contacto ? numero_contacto : "",
-      llanta ? llanta : "",
-      servicio ? servicio : "",
-      fecha ? fecha : "",
-      hora ? hora : ""
-    ]
+    const appointment_code = `CRDYNA${num_registros}`;
 
-    const response_add_row = await agregarFilaDemo(row_data)
+    const row_data = [
+      appointment_code, nombre, numero_contacto || "",
+      llanta || "", servicio || "", fecha || "", hora || ""
+    ];
+
+    const response_add_row = await agregarFilaDemo(row_data);
 
     if (response_add_row) {
       const rawData = {
-        "estado_reservacion": "Generada exitosamente",
-        "codigo_reservacion": appointment_code,
-        "datos_reserva": {
-          "nombre": nombre,
-          "servicio": servicio ? servicio : "",
-          "llanta": llanta ? llanta : "",
-          "fecha": fecha ? fecha : "",
-          "hora": hora ? hora : ""
-        }
-      }
+        estado_reservacion: "Generada exitosamente",
+        codigo_reservacion: appointment_code,
+        datos_reserva: { nombre, servicio: servicio || "", llanta: llanta || "", fecha: fecha || "", hora: hora || "" }
+      };
 
       let description = `📅 ¡Su reservación ha sido generada exitosamente!\n\n`;
       description += `🔑 Código de reservación: **${appointment_code}**\n\n`;
       description += `📋 Detalles de su reservación:\n`;
       description += `• 👤 Nombre: ${nombre}\n`;
-      description += `• 🔧 Servicio: ${servicio ? servicio : "N/A"}\n`;
-      description += `• 🛞 Llanta: ${llanta ? llanta : "N/A"}\n`;
-      description += `• 📆 Fecha: ${fecha ? fecha : "N/A"}\n`;
-      description += `• ⏰ Hora: ${hora ? hora : "N/A"}\n\n`;
+      description += `• 🔧 Servicio: ${servicio || "N/A"}\n`;
+      description += `• 🛞 Llanta: ${llanta || "N/A"}\n`;
+      description += `• 📆 Fecha: ${fecha || "N/A"}\n`;
+      description += `• ⏰ Hora: ${hora || "N/A"}\n\n`;
       description += `🤝 Le esperamos en nuestra sucursal:\n`;
       description += `📍 Calz de las Armas 591, Col. Providencia, Azcapotzalco CDMX, CP 02440\n`;
       description += `📞 Tel: 55 2637 3003\n`;
       description += `🕐 Horarios: Lunes-Viernes 9:00-18:00 • Sábados 9:00-15:00\n\n`;
 
-      const markdownTable = "| Se agendó la reservación con exito |\n"
-      // Return unified format
+      res.json({ raw: rawData, markdown: "| Se agendó la reservación con exito |\n", type: "markdown", desc: description });
+    } else {
+      let description = `⚠️ No se pudo generar su reservación.\n`;
+      description += `📞 Tel: 55 2637 3003`;
 
       res.json({
-        raw: rawData,
-        markdown: markdownTable,
-        type: "markdown",
-        desc: description
+        raw: { estado_reservacion: "No se pudo generar" },
+        markdown: "| ❌ No se pudo agendar la reservación |\n",
+        type: "markdown", desc: description
       });
     }
-
-    else {
-      const rawData = {
-        "estado_reservacion": "No se pudo generar",
-        "codigo_reservacion": appointment_code,
-        "datos_reserva": {
-          "nombre": nombre,
-          "servicio": servicio ? servicio : "",
-          "llanta": llanta ? llanta : "",
-          "fecha": fecha ? fecha : "",
-          "hora": hora ? hora : ""
-        }
-      }
-
-      let description = `⚠️ Lamentamos informarle que **no se pudo generar su reservación en este momento**.\n\n`;
-      description += `🔑 Código de intento: **${appointment_code}**\n\n`;
-      description += `📋 Detalles que intentó registrar:\n`;
-      description += `• 👤 Nombre: ${nombre}\n`;
-      description += `• 🔧 Servicio: ${servicio ? servicio : "N/A"}\n`;
-      description += `• 🛞 Llanta: ${llanta ? llanta : "N/A"}\n`;
-      description += `• 📆 Fecha: ${fecha ? fecha : "N/A"}\n`;
-      description += `• ⏰ Hora: ${hora ? hora : "N/A"}\n\n`;
-      description += `🙏 Por favor, intente nuevamente en unos minutos o comuníquese con nosotros para apoyo directo.\n\n`;
-      description += `📍 Grupo Magno – Calz de las Armas 591, Col. Providencia, Azcapotzalco CDMX, CP 02440\n`;
-      description += `📞 Tel: 55 2637 3003\n`;
-      description += `🕐 Horarios: Lunes-Viernes 9:00-18:00 • Sábados 9:00-15:00`;
-
-      const markdownTable = "| ❌ No se pudo agendar la reservación |\n";
-
-      res.json({
-        raw: rawData,
-        markdown: markdownTable,
-        type: "markdown",
-        desc: description
-      });
-    }
-
-
-
-
-
-
   } catch (error) {
-    console.error('Appointment creation error', error);
-    res.status(500).json({
-      success: false,
-      error: 'Ocurrió un error al crear la reservacion'
-    });
+    console.error('Appointment creation error (demo)', error);
+    res.status(500).json({ success: false, error: 'Ocurrió un error al crear la reservacion' });
   }
 });
-
-
 
 // Tire specification parsing test endpoint
 app.post('/api/price-list/tire-parse', (req, res) => {
   try {
     const { product_name } = req.body;
-
-    if (!product_name) {
-      return res.status(400).json({
-        success: false,
-        error: 'Please provide product name (product_name) for parsing'
-      });
-    }
+    if (!product_name) return res.status(400).json({ success: false, error: 'product_name required' });
 
     const specs = parseTireSpecification(product_name);
-
-    res.json({
-      success: true,
-      message: 'Tire specification parsing completed',
-      input: product_name,
-      parsed_specs: specs,
-      is_parseable: specs.width !== null
-    });
-
+    res.json({ success: true, input: product_name, parsed_specs: specs, is_parseable: specs.width !== null });
   } catch (error) {
     console.error('Tire parsing error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error occurred during tire specification parsing'
-    });
+    res.status(500).json({ success: false, error: 'Error during parsing' });
   }
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({
-    success: false,
-    error: 'Internal server error'
-  });
+  res.status(500).json({ success: false, error: 'Internal server error' });
 });
 
 // Backward compatible route redirects
 app.get('/api/health', (req, res) => res.redirect('/api/price-list/health'));
 app.get('/api/products', (req, res) => res.redirect('/api/price-list/products'));
-app.post('/api/product/search', (req, res) => {
-  // Forward request to new endpoint
-  req.url = '/api/price-list/search';
-  app.handle(req, res);
-});
-app.get('/api/product/id/:id', (req, res) => {
-  res.redirect(`/api/price-list/product/${req.params.id}`);
-});
-app.post('/api/reload', (req, res) => {
-  req.url = '/api/price-list/reload';
-  app.handle(req, res);
-});
+app.post('/api/product/search', (req, res) => { req.url = '/api/price-list/search'; app.handle(req, res); });
+app.get('/api/product/id/:id', (req, res) => { res.redirect(`/api/price-list/product/${req.params.id}`); });
+app.post('/api/reload', (req, res) => { req.url = '/api/price-list/reload'; app.handle(req, res); });
 
 // 404 handling
 app.use('*', (req, res) => {
@@ -2147,4 +1270,4 @@ app.listen(PORT, () => {
   console.log(`Visit http://localhost:${PORT} to view API documentation`);
 });
 
-module.exports = app; 
+module.exports = app;
