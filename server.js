@@ -884,9 +884,10 @@ async function getChatSummary(user_question) {
 // =====================================================
 app.post('/api/price-list/tire-search-es-new', async (req, res) => {
   try {
-    const { parametros, limit = 10 } = req.body;
+    const { parametros, limit = 10, conv } = req.body;
     const brand = "";
 
+    console.log(`Conversacion = ${conv}`);
     console.log(`Parámetros raw = ${parametros}`);
 
     const parametrosJsonString = await getChatSummary(parametros);
