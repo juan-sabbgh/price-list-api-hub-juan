@@ -1013,7 +1013,7 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
 
     let finalDescription = combinedDescription;
     if (totalFound > 0) {
-      finalDescription += `🎁 Mencione el código *DYNA25* al visitarnos y llévese un termo o lonchera ¡GRATIS! en la compra de sus llantas.\n\n`;
+      finalDescription += `\n🎁 Mencione el código *DYNA25* al visitarnos y llévese un termo o lonchera ¡GRATIS! en la compra de sus llantas.\n\n`;
       //dwdwdwadawdadwa
       /*finalDescription += `Para ofertas de hot sale comunicarse con un asesor\n\n`;
       finalDescription += `https://wa.me/${"+525553188770"}\n`;
