@@ -1013,7 +1013,7 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
 
     let finalDescription = combinedDescription;
     if (totalFound > 0) {
-      finalDescription += `\n🚛 ¿Compra de *12 llantas o más*, o cliente de flotilla recurrente? Obtenga *descuento de mayoreo*.\n\n`;
+      finalDescription += `\n🚛 ¿Compra de *12 llantas o más*, o cliente de flotilla recurrente? Obtenga un *descuento especial*.\n\n`;
       //dwdwdwadawdadwa
       /*finalDescription += `Para ofertas de hot sale comunicarse con un asesor\n\n`;
       finalDescription += `https://wa.me/${"+525553188770"}\n`;
