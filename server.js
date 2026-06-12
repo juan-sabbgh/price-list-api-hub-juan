@@ -44,6 +44,15 @@ const MAGNO_SEARCH_URL_NEW = process.env.MAGNO_SEARCH_URL_NEW
 const MAGNO_PUBLIC_API_URL = "https://api.admovil.net/api/CRM/TiendaOnLine/BusquedaProducto";
 const MAGNO_PUBLIC_ID_EMPG = process.env.MAGNO_PUBLIC_ID_EMPG;
 
+// =====================================================
+// API autenticada de Magno
+// =====================================================
+const MAGNO_AUTH_LOGIN_URL = "https://api.admovil.net/api/Auth/inicioSession";
+const MAGNO_AUTH_SEARCH_URL = "https://api.admovil.net/api/Invetario/Inv_Producto/get_productoBusqueda";
+const MAGNO_AUTH_USER = process.env.MAGNO_AUTH_USER;
+const MAGNO_AUTH_PASSWORD = process.env.MAGNO_AUTH_PASSWORD;
+const MAGNO_ID_EMPRESA = process.env.MAGNO_ID_EMPRESA;
+
 const auth = new google.auth.GoogleAuth({
   credentials: GOOGLE_SHEETS_CREDENTIALS,
   scopes: ["https://www.googleapis.com/auth/spreadsheets"],
@@ -740,6 +749,81 @@ async function fetchMagnoPublic(busqueda) {
   }
 }
 
+// =====================================================
+// Auth token cache para la API autenticada de Magno
+// =====================================================
+let magnoAuthToken = null;
+let magnoAuthTokenExpiry = null;
+
+async function getMagnoAuthToken() {
+  if (magnoAuthToken && magnoAuthTokenExpiry && Date.now() < magnoAuthTokenExpiry - 5 * 60 * 1000) {
+    return magnoAuthToken;
+  }
+
+  console.log('🔑 Obteniendo token de Magno auth API...');
+  const response = await fetch(MAGNO_AUTH_LOGIN_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      idEmpG: MAGNO_ID_EMP,
+      idEmpresa: MAGNO_ID_EMPRESA,
+      userName: MAGNO_AUTH_USER,
+      password: MAGNO_AUTH_PASSWORD
+    })
+  });
+
+  if (!response.ok) throw new Error(`Magno login error ${response.status}`);
+
+  const data = await response.json();
+  magnoAuthToken = data.access_token;
+  magnoAuthTokenExpiry = new Date(data.expires).getTime();
+  console.log(`✅ Token Magno obtenido, expira: ${data.expires}`);
+  return magnoAuthToken;
+}
+
+async function fetchMagnoAuth(textoFind) {
+  const token = await getMagnoAuthToken();
+
+  const response = await fetch(MAGNO_AUTH_SEARCH_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({ descontinuado: false, textoFind })
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) magnoAuthToken = null;
+    throw new Error(`Magno auth API error ${response.status}`);
+  }
+
+  const raw = await response.json();
+  const list = Array.isArray(raw) ? raw : (raw.data || raw.lista || []);
+
+  return list.map(p => ({
+    ...p,
+    descripcion: p.descripcion || '',
+    existencia: parseFloat(p.existencia) || 0,
+    precioNeto: p.precioNeto || p.precio || 0,
+  }));
+}
+
+// Regex para detectar medidas con espacios (ej: "185 60 R14") vs slash (ej: "185/60R14")
+const MEDIDA_ESPACIOS = /\d{3}\s+\d{2}\s+R\d{2}/i;
+
+async function fetchMagnoBest(busqueda) {
+  try {
+    const results = await fetchMagnoAuth(busqueda);
+    console.log(`✅ Magno auth API - ${results.length} resultados para "${busqueda}"`);
+    return results;
+  } catch (err) {
+    console.warn(`⚠️ Magno auth API falló (${err.message}), usando public API con filtro de espacios`);
+    const results = await fetchMagnoPublic(busqueda);
+    return results.filter(p => !MEDIDA_ESPACIOS.test(p.descripcion || ''));
+  }
+}
+
 // Tire specification search API - Spanish version
 app.post('/api/price-list/tire-search-es', async (req, res) => {
   try {
@@ -773,10 +857,7 @@ app.post('/api/price-list/tire-search-es', async (req, res) => {
 
     const textFind = `${width} ${finalAspectRatio ? finalAspectRatio : ""} ${finalRimDiameter.toString().replaceAll("R", "")} ${brand || ""}`.trim();
 
-    // =====================================================
-    // Usar la nueva API pública (sin auth)
-    // =====================================================
-    let matchingTires = await fetchMagnoPublic(textFind);
+    let matchingTires = await fetchMagnoBest(textFind);
 
     const regex = new RegExp(
       `${width}(?:(?:\\s+${finalAspectRatio})?\\s+(Z?R?${finalRimDiameter.replace("R", "")})|\\/${finalAspectRatio}\\s*Z?R(F?)\\s*${finalRimDiameter.replace("R", "")})`,
@@ -941,12 +1022,9 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
 
       const textFind = `${width} ${finalAspectRatio ? finalAspectRatio : ""} ${finalRimDiameter ? finalRimDiameter.toString().replaceAll("R", "") : ""} ${brand || ""}`.trim();
 
-      // =====================================================
-      // Usar la API pública (sin auth)
-      // =====================================================
       let matchingTires = [];
       try {
-        matchingTires = await fetchMagnoPublic(textFind);
+        matchingTires = await fetchMagnoBest(textFind);
       } catch (err) {
         console.error(`❌ Error buscando ${searchSpec}:`, err.message);
         matchingTires = [];
@@ -1068,10 +1146,7 @@ app.post('/api/price-list/tire-search-es-demo', async (req, res) => {
 
     console.log(`🔍 Demo search: ${textFind}`);
 
-    // =====================================================
-    // Usar la API pública (sin auth)
-    // =====================================================
-    let matchingTires = await fetchMagnoPublic(textFind);
+    let matchingTires = await fetchMagnoBest(textFind);
 
     const regex = new RegExp(
       `${width}(?:(?:\\s+${finalAspectRatio || ""})?\\s+(Z?R?${finalRimDiameter.replace("R", "")})|\\/${finalAspectRatio || ""}\\s*Z?R(F?)\\s*${finalRimDiameter.replace("R", "")})`,
