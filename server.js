@@ -1303,7 +1303,7 @@ app.post('/api/appointment/create-demo', async (req, res) => {
       };
 
       let description = `📅 ¡Su reservación ha sido generada exitosamente!\n\n`;
-      description += `🔑 Código de reservación: **${appointment_code}**\n\n`;
+      description += `🔑 Código de reservación: *${appointment_code}*\n\n`;
       description += `📋 Detalles de su reservación:\n`;
       description += `• 👤 Nombre: ${nombre}\n`;
       description += `• 🔧 Servicio: ${servicio || "N/A"}\n`;
@@ -1311,14 +1311,14 @@ app.post('/api/appointment/create-demo', async (req, res) => {
       description += `• 📆 Fecha: ${fecha || "N/A"}\n`;
       description += `• ⏰ Hora: ${hora || "N/A"}\n\n`;
       description += `🤝 Le esperamos en nuestra sucursal:\n`;
-      description += `📍 Calz de las Armas 591, Col. Providencia, Azcapotzalco CDMX, CP 02440\n`;
-      description += `📞 Tel: 55 2637 3003\n`;
+      description += `📍 Av. Ejemplo 123, Col. Central. Alcaldía Genérica, CDMX\n`;
+      description += `📞 Tel: 55 0000 0000\n`;
       description += `🕐 Horarios: Lunes-Viernes 9:00-18:00 • Sábados 9:00-15:00\n\n`;
 
       res.json({ raw: rawData, markdown: "| Se agendó la reservación con exito |\n", type: "markdown", desc: description });
     } else {
       let description = `⚠️ No se pudo generar su reservación.\n`;
-      description += `📞 Tel: 55 2637 3003`;
+      description += `📞 Tel: 55 0000 0000`;
 
       res.json({
         raw: { estado_reservacion: "No se pudo generar" },
