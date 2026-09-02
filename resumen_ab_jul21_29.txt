@@ -1,0 +1,9 @@
+Resumen Test A/B Chatbot WhatsApp — 21 al 29 de julio 2026
+
+Durante este periodo se analizaron 207 conversaciones del chatbot generadas por dos anuncios de Facebook.
+
+El Anuncio B siguió siendo más eficiente que el A en todas las métricas: 87% de tasa de cotización vs 77% de A, 79% de alta intención de compra vs 65% de A, y generó la única reserva formal del período (código CRDYNA). El Anuncio A no produjo ninguna reserva.
+
+El segmento de llanta más buscado fue nuevamente R15 (185/65R15, 195/65R15), tanto en Ad A como en Ad B, seguido de medidas R16 para SUVs.
+
+Decisión tomada: Ad A fue pausado y todo el presupuesto se concentra en Ad B. El siguiente paso es diseñar variantes de Ad B segmentadas por tipo de vehículo, una para sedanes (R14–R15) y otra para SUVs (R16–R18), para seguir mejorando la calidad de los contactos que llegan al chatbot.

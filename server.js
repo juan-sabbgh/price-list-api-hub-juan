@@ -1197,11 +1197,11 @@ app.post('/api/price-list/tire-search-es-demo', async (req, res) => {
       description += `*Llantas ${searchSpec}:*\n`;
       matchingTires.forEach((tire, index) => {
         const f = formatProductPrices(tire);
-        description += `${index + 1}. ${f['descripcion']} - *$${f['precioNeto'].toFixed(0)}* (Disponible: ${f['existencia']})\n\n`;
+        description += `${index + 1}. ${f['descripcion']} - *$${f['precioNeto'].toFixed(0)}* (Disponible: ${f['existencia']})\n`;
       });
 
       description += `🎁 *¡PROMOCIÓN ESPECIAL!*\n`;
-      description += `Mencione el código de promoción *DYNA25* al visitarnos y llévese un termo o lonchera ¡GRATIS! en la compra de sus llantas.\n\n`;
+      description += `Mencione el código de promoción *PROMO25* al visitarnos y llévese un termo o lonchera ¡GRATIS! en la compra de sus llantas.\n\n`;
       description += `✅ *Incluye*: Instalación profesional, válvula nueva, balanceo por computadora, inflado con nitrógeno, garantía de 12 meses rotación gratis a partir de 2 llantas\n`;
       description += `\n📦 *Importante:* Le recomendamos confirmar el stock antes de su visita, ya que nuestro inventario se mueve constantemente.\n\n`;
       description += `¿Le gustaría que le agende una cita para la instalación de sus llantas, o prefiere visitarnos directamente en el horario que le acomode?`;
@@ -1209,7 +1209,7 @@ app.post('/api/price-list/tire-search-es-demo', async (req, res) => {
       description += `❌ Lamentamos informarle que no encontramos llantas ${searchSpec} en nuestro inventario actual\n\n`;
       description += `🌟 ¡Pero no se preocupe! Podemos gestionar un *pedido especial* para usted. Las llantas por pedido tardan aproximadamente 1 día hábil en llegar\n\n`;
       description += `📞 Para coordinar su pedido especial, contacte a nuestro equipo de servicio al cliente:\n`;
-      description += `*55 2637 3003*\n\n`;
+      description += `*55 0000 0000*\n\n`;
       description += `💡 También puedo ayudarle con:\n`;
       description += `• 🔍 Verificar juntos las especificaciones de la llanta\n`;
       description += `• 🛞 Buscar con otras medidas alternativas`;

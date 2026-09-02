@@ -1,0 +1,11 @@
+Resumen Test A/B Chatbot WhatsApp — 10 al 18 de julio 2026
+
+Durante este periodo se analizaron 145 conversaciones del chatbot generadas por dos anuncios de Facebook.
+
+El Anuncio A ("Quiero cotizar llantas") generó 105 conversaciones pero solo 1 reserva formal, una tasa de conversión del 1%.
+
+El Anuncio B ("Busco llantas") atrajo menos volumen (24 conversaciones), pero con una calidad de intención notablemente mayor: el 29% preguntó la ubicación del local (señal de visita) y generó 1 reserva sobre 24 contactos, 4.2% de conversión, 4 veces más efectivo que el Anuncio A.
+
+En total se generaron 4 reservas formales (códigos CRDYNA) en el periodo. El segmento de llanta más buscado fue R15 (185/65R15, 185/60R15, 195/65R15), que representa el mercado principal.
+
+Recomendación: aumentar presupuesto en el Anuncio B y probar variantes de su copy, manteniendo el Anuncio A con presupuesto reducido dado su mayor volumen de entrada.
