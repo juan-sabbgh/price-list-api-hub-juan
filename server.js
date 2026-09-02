@@ -1200,7 +1200,7 @@ app.post('/api/price-list/tire-search-es-demo', async (req, res) => {
         description += `${index + 1}. ${f['descripcion']} - *$${f['precioNeto'].toFixed(0)}* (Disponible: ${f['existencia']})\n`;
       });
 
-      description += `🎁 *¡PROMOCIÓN ESPECIAL!*\n`;
+      description += `\n🎁 *¡PROMOCIÓN ESPECIAL!*\n`;
       description += `Mencione el código de promoción *PROMO25* al visitarnos y llévese un termo o lonchera ¡GRATIS! en la compra de sus llantas.\n\n`;
       description += `✅ *Incluye*: Instalación profesional, válvula nueva, balanceo por computadora, inflado con nitrógeno, garantía de 12 meses rotación gratis a partir de 2 llantas\n`;
       description += `\n📦 *Importante:* Le recomendamos confirmar el stock antes de su visita, ya que nuestro inventario se mueve constantemente.\n\n`;
