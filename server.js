@@ -1123,99 +1123,157 @@ app.post('/api/price-list/tire-search-es-new', async (req, res) => {
 // Demo tire search
 app.post('/api/price-list/tire-search-es-demo', async (req, res) => {
   try {
-    const {
-      width, aspect_ratio, aspectRatio, rim_diameter, diameter,
-      exact_match = false, brand, limit = 10
-    } = req.body;
+    const { parametros, limit = 10, conv } = req.body;
+    const brand = "";
 
-    let finalAspectRatio = aspect_ratio || aspectRatio;
-    const finalRimDiameter = rim_diameter || diameter;
+    console.log(`Conversacion = ${conv}`);
+    console.log(`Parámetros raw = ${parametros}`);
 
-    if (
-      (width == '205' || width == '255') &&
-      finalRimDiameter == '18' &&
-      finalAspectRatio == null
-    ) {
-      finalAspectRatio = 70;
+    const parametrosJsonString = await getChatSummary(parametros);
+
+    let jsonToParse = parametrosJsonString;
+    const jsonMatch = parametrosJsonString.match(/```json\s*([\s\S]*?)\s*```/);
+    if (jsonMatch && jsonMatch[1]) jsonToParse = jsonMatch[1];
+
+    const cleanedJsonString = jsonToParse.replace(/[^\S \t\r\n]/g, ' ').trim();
+    console.log(`Parámetros parseados = ${cleanedJsonString}`);
+
+    let tireQueries = [];
+    try {
+      tireQueries = JSON.parse(cleanedJsonString);
+      if (!Array.isArray(tireQueries)) throw new Error("La respuesta del LLM no fue un arreglo JSON.");
+    } catch (e) {
+      console.error("Error parseando la respuesta de getChatSummary:", e);
+      console.error("JSON (limpio) que falló:", cleanedJsonString);
+      return res.status(500).json({ success: false, error: 'Error al procesar las medidas de los neumáticos.' });
     }
 
-    if (!width) {
-      return res.status(400).json({ success: false, error: 'El ancho del neumático (width) es un parámetro requerido' });
-    }
-
-    const searchType = finalAspectRatio ? 'car' : 'truck';
-    const textFind = `${width} ${finalAspectRatio ? finalAspectRatio : ""} ${finalRimDiameter.toString().replaceAll("R", "")} ${brand || ""}`.trim();
-
-    console.log(`🔍 Demo search: ${textFind}`);
-
-    let matchingTires = await fetchMagnoBest(textFind);
-
-    const regex = new RegExp(
-      `${width}(?:(?:\\s+${finalAspectRatio || ""})?\\s+(Z?R?${finalRimDiameter.replace("R", "")})|\\/${finalAspectRatio || ""}\\s*Z?R(F?)\\s*${finalRimDiameter.replace("R", "")})`,
-      "i"
-    );
-
-    matchingTires = matchingTires.filter(p =>
-      p.existencia && p.existencia > 0 && regex.test(p.descripcion)
-    );
-
-    matchingTires.sort((a, b) => formatPrice(a['precioNeto']) - formatPrice(b['precioNeto']));
-
-    const searchSpec = searchType === 'car'
-      ? `${width}/${finalAspectRatio}R${finalRimDiameter}`
-      : `${width}R${finalRimDiameter}`;
-
-    const resultLimit = Math.min(Math.max(parseInt(limit) || 10, 1), 100);
-
-    const rawData = {
-      searchType, searchSpec,
-      totalFound: matchingTires.length,
-      results: matchingTires.slice(0, resultLimit).map(tire => {
-        const f = formatProductPrices(tire);
-        return {
-          id: f['clave'], product: f['descripcion'], stock: f['existencia'], price: f['precioNeto'],
-          specs: { width, aspect_ratio: finalAspectRatio, rim_diameter: finalRimDiameter, type: "car", original: f['descripcion'] }
-        };
-      }),
-      searchParams: { width, aspectRatio: finalAspectRatio || null, diameter: finalRimDiameter || null, type: searchType, exactMatch: exact_match, limit: resultLimit },
-      statistics: { totalTireProducts: matchingTires.length, carTires: matchingTires.length }
+    // Factor de conversión para que los precios de la demo sean realistas en euros
+    const FACTOR_DEMO_EUR = 10;
+    const formatearPrecioDemo = (precioOriginal) => {
+      const precioEUR = precioOriginal / FACTOR_DEMO_EUR;
+      return precioEUR.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     };
 
-    let markdownTable = "| # | Nombre del Producto | Stock | Precio |\n|:------------|:--------------------|:------|:-------|\n";
-    if (matchingTires.length > 0) {
-      matchingTires.slice(0, resultLimit).forEach((tire, index) => {
-        const f = formatProductPrices(tire);
-        markdownTable += `| ${index + 1} | ${f['descripcion']} | ${f['existencia']} | $${f['precioNeto']} |\n`;
+    let allRawResults = [];
+    let combinedMarkdownTable = "| # | Nombre del Producto | Stock | Precio |\n|:------------|:--------------------|:------|:-------|\n";
+    let combinedDescription = "";
+    let combinedSearchParams = [];
+    let totalFound = 0;
+    const resultLimit = Math.min(Math.max(parseInt(limit) || 10, 1), 100);
+    let tireSpecs = [];
+
+    for (const tireQuery of tireQueries) {
+      const { width, aspect_ratio, rim_diameter } = tireQuery;
+
+      let finalAspectRatio = aspect_ratio ? aspect_ratio : "";
+      const finalRimDiameter = rim_diameter ? rim_diameter : "";
+
+      if (
+        (width == '205' || width == '255') &&
+        finalRimDiameter == '18' &&
+        (finalAspectRatio == null || finalAspectRatio === undefined)
+      ) {
+        finalAspectRatio = '70';
+      }
+
+      const searchType = finalAspectRatio ? 'car' : 'truck';
+      const searchSpec = searchType === 'car'
+        ? `${width}/${finalAspectRatio}R${finalRimDiameter}`
+        : `${width}R${finalRimDiameter}`;
+
+      console.log(`🔍 Buscando neumático ${searchSpec} (W:${width}, AR:${finalAspectRatio || 'N/A'}, D:${finalRimDiameter || 'N/A'})...`);
+      tireSpecs.push(searchSpec);
+
+      const textFind = `${width} ${finalAspectRatio ? finalAspectRatio : ""} ${finalRimDiameter ? finalRimDiameter.toString().replaceAll("R", "") : ""} ${brand || ""}`.trim();
+
+      let matchingTires = [];
+      try {
+        matchingTires = await fetchMagnoBest(textFind);
+      } catch (err) {
+        console.error(`❌ Error buscando ${searchSpec}:`, err.message);
+        matchingTires = [];
+      }
+
+      const cleanRim = finalRimDiameter.toString().replace("R", "");
+      const arPart = finalAspectRatio ? `[\\/\\s]*${finalAspectRatio}` : "";
+      const regex = new RegExp(`${width}${arPart}[\\/\\s]*Z?R?F?${cleanRim}`, "i");
+
+      matchingTires = matchingTires.filter(p =>
+        p.existencia && p.existencia > 0 && regex.test(p.descripcion) && formatPrice(p['precioNeto']) > 0
+      );
+
+      matchingTires.sort((a, b) => formatPrice(a['precioNeto']) - formatPrice(b['precioNeto']));
+
+      totalFound += matchingTires.length;
+      combinedSearchParams.push({
+        width, aspectRatio: finalAspectRatio || null,
+        diameter: finalRimDiameter || null, type: searchType, limit: resultLimit
       });
-    } else {
-      markdownTable += "| - | No se encontraron neumáticos | - | - |\n";
+
+      const formattedResults = matchingTires.slice(0, resultLimit).map(tire => {
+        const f = formatProductPricesNew(tire);
+        const precioDemo = parseFloat((f['precioNeto'] / FACTOR_DEMO_EUR).toFixed(2));
+        return {
+          id: f['clave'], product: f['descripcion'], stock: f['existencia'], price: precioDemo,
+          specs: { width, aspect_ratio: finalAspectRatio, rim_diameter: finalRimDiameter, type: searchType, original: f['descripcion'] }
+        };
+      });
+      allRawResults.push(...formattedResults);
+
+      if (matchingTires.length > 0) {
+        combinedMarkdownTable += `| **Neumáticos ${searchSpec}** | | | |\n`;
+        matchingTires.slice(0, resultLimit).forEach((tire, index) => {
+          const f = formatProductPricesNew(tire);
+          combinedMarkdownTable += `| ${index + 1} | ${f['descripcion']} | ${parseInt(f['existencia'])} | ${formatearPrecioDemo(f['precioNeto'])} € |\n`;
+        });
+      } else {
+        combinedMarkdownTable += `| - | No se encontraron neumáticos ${searchSpec} | - | - |\n`;
+      }
+
+      if (matchingTires.length > 0) {
+        combinedDescription += `*Neumáticos ${searchSpec}:*\n`;
+        matchingTires.slice(0, resultLimit).forEach((tire, index) => {
+          const f = formatProductPricesNew(tire);
+          combinedDescription += `${index + 1}. ${f['descripcion']} - *${formatearPrecioDemo(f['precioNeto'])} €* (Disponible: ${parseInt(f['existencia'])})\n`;
+        });
+      } else {
+        await agregarFilaLlantas(textFind);
+        combinedDescription += `❌ No encontramos neumáticos ${searchSpec} (param: ${textFind}).\n\n`;
+      }
     }
 
-    let description = ``;
+    const rawData = {
+      searchType: "multiple",
+      searchParams: combinedSearchParams,
+      totalFound,
+      results: allRawResults,
+      statistics: {
+        totalTireProducts: totalFound,
+        carTires: allRawResults.filter(p => p.specs.type === 'car').length,
+        truckTires: allRawResults.filter(p => p.specs.type === 'truck').length
+      }
+    };
 
-    if (matchingTires.length > 0) {
-      description += `*Llantas ${searchSpec}:*\n`;
-      matchingTires.forEach((tire, index) => {
-        const f = formatProductPrices(tire);
-        description += `${index + 1}. ${f['descripcion']} - *$${f['precioNeto'].toFixed(0)}* (Disponible: ${f['existencia']})\n`;
-      });
-
-      description += `\n🎁 *¡PROMOCIÓN ESPECIAL!*\n`;
-      description += `Mencione el código de promoción *PROMO25* al visitarnos y llévese un termo o lonchera ¡GRATIS! en la compra de sus llantas.\n\n`;
-      description += `✅ *Incluye*: Instalación profesional, válvula nueva, balanceo por computadora, inflado con nitrógeno, garantía de 12 meses rotación gratis a partir de 2 llantas\n`;
-      description += `\n📦 *Importante:* Le recomendamos confirmar el stock antes de su visita, ya que nuestro inventario se mueve constantemente.\n\n`;
-      description += `¿Le gustaría que le agende una cita para la instalación de sus llantas, o prefiere visitarnos directamente en el horario que le acomode?`;
+    let finalDescription = combinedDescription;
+    if (totalFound > 0) {
+      finalDescription += `\n🚛 ¿Compra de *12 neumáticos o más*, o cliente de flota recurrente? Consiga un *descuento especial*.\n\n`;
+      finalDescription += `🎁 *¡PROMOCIÓN ESPECIAL!*\n`;
+      finalDescription += `Mencione el código de promoción *PROMO25* al visitarnos y llévese un termo o una bolsa térmica ¡GRATIS! en la compra de sus neumáticos.\n\n`;
+      finalDescription += `✅ *Incluye*: instalación profesional, válvula nueva, equilibrado por ordenador, inflado con nitrógeno, garantía de 12 meses y rotación gratuita a partir de 2 neumáticos\n`;
+      finalDescription += `\n📦 *Importante:* le recomendamos confirmar existencias antes de su visita, ya que nuestro inventario se mueve constantemente.\n`;
+      finalDescription += `¿Le gustaría que le reserve una cita para la instalación de sus neumáticos, o prefiere pasarse directamente en el horario que le venga bien?`;
     } else {
-      description += `❌ Lamentamos informarle que no encontramos llantas ${searchSpec} en nuestro inventario actual\n\n`;
-      description += `🌟 ¡Pero no se preocupe! Podemos gestionar un *pedido especial* para usted. Las llantas por pedido tardan aproximadamente 1 día hábil en llegar\n\n`;
-      description += `📞 Para coordinar su pedido especial, contacte a nuestro equipo de servicio al cliente:\n`;
-      description += `*55 0000 0000*\n\n`;
-      description += `💡 También puedo ayudarle con:\n`;
-      description += `• 🔍 Verificar juntos las especificaciones de la llanta\n`;
-      description += `• 🛞 Buscar con otras medidas alternativas`;
+      const mensaje = encodeURIComponent(`¡Hola! Me gustaría encargar unos neumáticos ${tireSpecs.toString()} sobre pedido`);
+      const enlaceLargoWhatsApp = `https://wa.me/${"+34910000000"}?text=${mensaje}`;
+      finalDescription += `🌟 ¡Pero no se preocupe! Podemos gestionar un *pedido especial* para usted. Los neumáticos sobre pedido tardan aproximadamente 1 día laborable en llegar\n\n`;
+      finalDescription += `📞 Para coordinar su pedido especial, contacte con nuestro equipo de atención al cliente por medio del siguiente enlace, ellos le facilitarán un presupuesto de los neumáticos sobre pedido:\n`;
+      finalDescription += `${enlaceLargoWhatsApp} \n`;
+      finalDescription += `O si lo prefiere, puede llamar al siguiente número:\n`;
+      finalDescription += `*91 000 00 00*`;
     }
 
-    res.json({ raw: rawData, markdown: markdownTable, type: "markdown", desc: description });
+    res.json({ raw: rawData, markdown: combinedMarkdownTable, type: "markdown", desc: finalDescription });
 
   } catch (error) {
     console.error('Tire search error (ES demo):', error);
@@ -1297,38 +1355,38 @@ app.post('/api/appointment/create-demo', async (req, res) => {
 
     if (response_add_row) {
       const rawData = {
-        estado_reservacion: "Generada exitosamente",
-        codigo_reservacion: appointment_code,
-        datos_reserva: { nombre, servicio: servicio || "", llanta: llanta || "", fecha: fecha || "", hora: hora || "" }
+        estado_reserva: "Generada correctamente",
+        codigo_reserva: appointment_code,
+        datos_reserva: { nombre, servicio: servicio || "", neumatico: llanta || "", fecha: fecha || "", hora: hora || "" }
       };
 
-      let description = `📅 ¡Su reservación ha sido generada exitosamente!\n\n`;
-      description += `🔑 Código de reservación: *${appointment_code}*\n\n`;
-      description += `📋 Detalles de su reservación:\n`;
+      let description = `📅 ¡Su reserva se ha generado correctamente!\n\n`;
+      description += `🔑 Código de reserva: *${appointment_code}*\n\n`;
+      description += `📋 Detalles de su reserva:\n`;
       description += `• 👤 Nombre: ${nombre}\n`;
       description += `• 🔧 Servicio: ${servicio || "N/A"}\n`;
-      description += `• 🛞 Llanta: ${llanta || "N/A"}\n`;
+      description += `• 🛞 Neumático: ${llanta || "N/A"}\n`;
       description += `• 📆 Fecha: ${fecha || "N/A"}\n`;
       description += `• ⏰ Hora: ${hora || "N/A"}\n\n`;
-      description += `🤝 Le esperamos en nuestra sucursal:\n`;
-      description += `📍 Av. Ejemplo 123, Col. Central. Alcaldía Genérica, CDMX\n`;
-      description += `📞 Tel: 55 0000 0000\n`;
-      description += `🕐 Horarios: Lunes-Viernes 9:00-18:00 • Sábados 9:00-15:00\n\n`;
+      description += `🤝 Le esperamos en nuestra tienda:\n`;
+      description += `📍 Calle de Alcalá 123, Barrio de Salamanca, Madrid\n`;
+      description += `📞 Tel: 91 000 00 00\n`;
+      description += `🕐 Horarios: Lunes-Viernes 9:00-18:00 • Sábados 9:00-14:00\n\n`;
 
-      res.json({ raw: rawData, markdown: "| Se agendó la reservación con exito |\n", type: "markdown", desc: description });
+      res.json({ raw: rawData, markdown: "| Se ha agendado la reserva con éxito |\n", type: "markdown", desc: description });
     } else {
-      let description = `⚠️ No se pudo generar su reservación.\n`;
-      description += `📞 Tel: 55 0000 0000`;
+      let description = `⚠️ No se ha podido generar su reserva.\n`;
+      description += `📞 Tel: 91 000 00 00`;
 
       res.json({
-        raw: { estado_reservacion: "No se pudo generar" },
-        markdown: "| ❌ No se pudo agendar la reservación |\n",
+        raw: { estado_reserva: "No se pudo generar" },
+        markdown: "| ❌ No se pudo agendar la reserva |\n",
         type: "markdown", desc: description
       });
     }
   } catch (error) {
     console.error('Appointment creation error (demo)', error);
-    res.status(500).json({ success: false, error: 'Ocurrió un error al crear la reservacion' });
+    res.status(500).json({ success: false, error: 'Ocurrió un error al crear la reserva' });
   }
 });
 
